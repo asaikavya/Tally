@@ -1,0 +1,20 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>c70455ef-fd74-4074-ae6f-f6f1c320a26d</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.12" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Tally.Domain\Tally.Domain.csproj" />
+    <ProjectReference Include="..\Tally.Infrastructure\Tally.Infrastructure.csproj" />
+    <ProjectReference Include="..\Tally.Ai\Tally.Ai.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,5 +1,9 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+using Tally.Infrastructure.Billing;
 using Tally.Infrastructure.Data;
+using Tally.Infrastructure.PayPal;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -8,6 +12,21 @@ builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 builder.Services.AddDbContext<TallyDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("TallyDb")));
+
+builder.Services.AddOptions<PayPalOptions>()
+    .Bind(builder.Configuration.GetSection(PayPalOptions.Section))
+    .ValidateDataAnnotations()
+    .ValidateOnStart();                    // missing keys fail at startup, not mid-request
+
+builder.Services.AddHttpClient("PayPal", (sp, client) =>
+{
+    var baseUrl = sp.GetRequiredService<IOptions<PayPalOptions>>().Value.BaseUrl;
+    client.BaseAddress = new Uri(baseUrl.TrimEnd('/') + "/");
+});
+
+builder.Services.AddSingleton<PayPalTokenProvider>();
+builder.Services.AddScoped<PayPalInvoiceClient>();
+builder.Services.AddScoped<InvoicingService>();
 
 var app = builder.Build();
 

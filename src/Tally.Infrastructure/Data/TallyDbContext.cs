@@ -36,6 +36,7 @@ public class TallyDbContext(DbContextOptions<TallyDbContext> options) : DbContex
 
         // One PayPal invoice per family per month
         model.Entity<Invoice>().HasIndex(i => new { i.PayerId, i.PeriodStart }).IsUnique();
+        model.Entity<Invoice>().Property(i => i.PayUrl).HasMaxLength(500);
 
         // Each PayPal event is processed once
         model.Entity<WebhookEvent>().HasIndex(e => e.PayPalEventId).IsUnique();

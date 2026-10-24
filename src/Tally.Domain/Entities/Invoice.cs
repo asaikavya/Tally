@@ -11,5 +11,7 @@ namespace Tally.Domain.Entities
         public required string PayPalInvoiceId { get; set; }
         public required string PayPalStatus { get; set; }
         public DateTime? SentAtUtc { get; set; }
+
+        public string? PayUrl { get; set; }        // the link the payer opens
     }
 }

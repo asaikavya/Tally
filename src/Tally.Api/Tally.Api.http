@@ -1,6 +1,8 @@
-@Tally.Api_HostAddress = http://localhost:5242
+@Tally.Api_HostAddress = https://localhost:7218
 
-GET {{Tally.Api_HostAddress}}/weatherforecast/
-Accept: application/json
+### Bill Ravi Kumar for November
+POST {{Tally.Api_HostAddress}}/api/payers/01A1680E-B901-7D96-A4DB-8B145B3D4FFD/invoices?period=2026-11-01
 
 ###
+GET {{Tally.Api_HostAddress}}/weatherforecast/
+Accept: application/json

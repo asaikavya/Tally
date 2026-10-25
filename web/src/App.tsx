@@ -1,11 +1,5 @@
-import { Button } from "@/components/ui/button"
+import { HomePage } from "@/features/home/HomePage"
 
-function App() {
-  return (
-    <div className="flex min-h-svh items-center justify-center">
-      <Button>Tally is alive</Button>
-    </div>
-  )
+export default function App() {
+  return <HomePage />
 }
-
-export default App

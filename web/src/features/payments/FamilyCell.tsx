@@ -2,7 +2,8 @@ import type { CustomCellRendererProps } from "ag-grid-react"
 import type { PaymentRow } from "./types"
 
 export function FamilyCell(props: CustomCellRendererProps<PaymentRow>) {
-    if (!props.node.group) return null
+      if (props.node.footer) return <strong>November total</strong>
+  if (!props.node.group) return null
   const first = props.node.allLeafChildren?.[0]?.data
   const count = props.node.allLeafChildren?.length ?? 0
   return (

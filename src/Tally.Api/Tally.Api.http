@@ -33,3 +33,6 @@ POST {{Tally.Api_HostAddress}}/api/sync/paypal
 GET {{Tally.Api_HostAddress}}/api/home?period=2026-11-01&asOf=2026-11-12
 ###
 GET https://localhost:7218/api/home/needs-you?period=2026-11-01&asOf=2026-11-12
+
+###
+GET https://localhost:7218/api/payments?period=2026-11-01&asOf=2026-11-12

@@ -7,3 +7,12 @@ export type HomeSummary = {
   late: number
   lateCharges: number
 }
+export type NeedsYouItem = {
+  kind: "late"
+  payerId: string
+  payerName: string
+  country: string | null
+  amount: number
+  daysLate: number
+  lines: string[]
+}

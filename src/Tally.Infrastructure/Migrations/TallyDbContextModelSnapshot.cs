@@ -388,6 +388,8 @@ namespace Tally.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("OfferingId");
+
                     b.ToTable("PricePlans");
                 });
 
@@ -488,6 +490,17 @@ namespace Tally.Infrastructure.Migrations
                     b.Navigation("Member");
 
                     b.Navigation("PricePlan");
+                });
+
+            modelBuilder.Entity("Tally.Domain.Entities.PricePlan", b =>
+                {
+                    b.HasOne("Tally.Domain.Entities.Offering", "Offering")
+                        .WithMany()
+                        .HasForeignKey("OfferingId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Offering");
                 });
 
             modelBuilder.Entity("Tally.Domain.Member", b =>

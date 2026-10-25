@@ -47,6 +47,7 @@ public class TallyDbContext(DbContextOptions<TallyDbContext> options) : DbContex
         model.Entity<Payment>().Property(p => p.Currency).HasMaxLength(3);
         model.Entity<Allocation>().Property(a => a.Reasons).HasMaxLength(1000);
 
+
         // Never cascade-delete financial history
         foreach (var fk in model.Model.GetEntityTypes().SelectMany(e => e.GetForeignKeys()))
             fk.DeleteBehavior = DeleteBehavior.Restrict;

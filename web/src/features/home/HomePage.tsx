@@ -3,13 +3,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { getJson } from "@/lib/api"
 import { money } from "@/lib/money"
 import type { HomeSummary } from "./types"
+import { q } from "@/lib/demo"
+import { NeedsYou } from "./NeedsYou"
 
 export function HomePage() {
   const [data, setData] = useState<HomeSummary | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    getJson<HomeSummary>("/api/home?period=2026-11-01&asOf=2026-11-12")
+    getJson<HomeSummary>(`/api/home?${q}`)
       .then(setData)
       .catch((e: Error) => setError(e.message))
   }, [])
@@ -49,6 +51,7 @@ export function HomePage() {
           </CardContent>
         </Card>
       </div>
+      <NeedsYou />
     </main>
   )
 }

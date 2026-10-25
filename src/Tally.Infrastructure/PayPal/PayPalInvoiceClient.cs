@@ -50,4 +50,16 @@ public sealed class PayPalInvoiceClient(IHttpClientFactory httpFactory, PayPalTo
         var details = await response.Content.ReadAsStringAsync(ct);
         throw new HttpRequestException($"PayPal returned {(int)response.StatusCode}: {details}");
     }
+    // Asks PayPal: "did you really send this webhook?"
+    public async Task<bool> VerifyWebhookAsync(WebhookHeaders h, string rawBody, string webhookId, CancellationToken ct)
+    {
+        using var doc = System.Text.Json.JsonDocument.Parse(rawBody);
+        var body = new VerifyWebhookRequest(h.AuthAlgo, h.CertUrl, h.TransmissionId, h.TransmissionSig,
+                                            h.TransmissionTime, webhookId, doc.RootElement.Clone());
+
+        using var request = await AuthorizedAsync(HttpMethod.Post, "v1/notifications/verify-webhook-signature", ct);
+        request.Content = JsonContent.Create(body, options: PayPalJson.Options);
+        var result = await SendAsync<VerifyWebhookResponse>(request, ct);
+        return result.VerificationStatus == "SUCCESS";
+    }
 }

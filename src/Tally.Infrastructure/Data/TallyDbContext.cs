@@ -40,6 +40,7 @@ public class TallyDbContext(DbContextOptions<TallyDbContext> options) : DbContex
 
         // Each PayPal event is processed once
         model.Entity<WebhookEvent>().HasIndex(e => e.PayPalEventId).IsUnique();
+        model.Entity<WebhookEvent>().Property(e => e.Payload).HasColumnType("nvarchar(max)");
 
         model.Entity<Payment>().HasIndex(p => p.ReceivedAtUtc);
         model.Entity<Payment>().HasIndex(p => p.ExternalId);

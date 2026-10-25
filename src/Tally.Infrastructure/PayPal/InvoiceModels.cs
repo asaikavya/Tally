@@ -15,6 +15,15 @@ public sealed record Money(string CurrencyCode, string Value);
 
 public sealed record SendInvoiceRequest(bool SendToRecipient, bool SendToInvoicer);
 
-public sealed record InvoiceResponse(string Id, string Status, InvoiceResponseDetail? Detail);
 public sealed record InvoiceResponseDetail(InvoiceMetadata? Metadata);
 public sealed record InvoiceMetadata(string? RecipientViewUrl);
+
+
+public sealed record InvoiceResponse(string Id, string Status, InvoiceResponseDetail? Detail, InvoicePayments? Payments);
+public sealed record InvoicePayments(Money? PaidAmount, IReadOnlyList<InvoiceTransaction>? Transactions);
+public sealed record InvoiceTransaction(string? PaymentId, Money? Amount, string? PaymentDate, string? Method);
+
+public sealed record WebhookHeaders(string AuthAlgo, string CertUrl, string TransmissionId, string TransmissionSig, string TransmissionTime);
+public sealed record VerifyWebhookRequest(string AuthAlgo, string CertUrl, string TransmissionId,
+    string TransmissionSig, string TransmissionTime, string WebhookId, System.Text.Json.JsonElement WebhookEvent);
+public sealed record VerifyWebhookResponse(string VerificationStatus);

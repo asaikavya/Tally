@@ -9,4 +9,6 @@ public sealed class PayPalOptions
     [Required] public string BaseUrl { get; set; } = "";
     [Required] public string ClientId { get; set; } = "";
     [Required] public string ClientSecret { get; set; } = "";
+    public string WebhookId { get; set; } = "";
+    public bool SkipWebhookVerification { get; set; }   // Development only, for PayPal's simulator
 }

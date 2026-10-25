@@ -3,6 +3,29 @@
 ### Bill Ravi Kumar for November
 POST {{Tally.Api_HostAddress}}/api/payers/01A1680E-B901-7D96-A4DB-8B145B3D4FFD/invoices?period=2026-11-01
 
+### Bill Meera Patel for November
+POST {{Tally.Api_HostAddress}}/api/payers/01A1680E-B902-7D7A-9041-362D463B2D1D/invoices?period=2026-11-01
+
 ###
 GET {{Tally.Api_HostAddress}}/weatherforecast/
 Accept: application/json
+
+###
+POST {{Tally.Api_HostAddress}}/api/webhooks/paypal
+Content-Type: application/json
+
+{ "id": "WH-TEST-0001", "event_type": "INVOICING.INVOICE.PAID", "resource": { "invoice": { "id": "INV2-FAKE" } } }
+
+###
+POST https://rsz386j3-7218.usw3.devtunnels.ms/api/webhooks/paypal
+Content-Type: application/json
+
+{ "id": "WH-TUNNEL-0001", "event_type": "INVOICING.INVOICE.PAID", "resource": { "invoice": { "id": "INV2-FAKE" } } }
+###
+POST {{Tally.Api_HostAddress}}/api/webhooks/paypal
+Content-Type: application/json
+
+{ "id": "WH-MANUAL-0001", "event_type": "INVOICING.INVOICE.PAID", "resource": { "invoice": { "id": "INV2-26PV-HP78-UH2P-6WL9" } } }
+
+###
+POST {{Tally.Api_HostAddress}}/api/sync/paypal

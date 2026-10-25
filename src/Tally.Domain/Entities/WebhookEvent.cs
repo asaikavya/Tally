@@ -10,5 +10,6 @@ namespace Tally.Domain.Entities
         public required string EventType { get; set; }
         public DateTime ReceivedAtUtc { get; set; }
         public DateTime? ProcessedAtUtc { get; set; }
+        public string Payload { get; set; } = "";     // the raw JSON PayPal sent
     }
 }

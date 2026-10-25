@@ -2,7 +2,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Tally.Infrastructure.Billing;
 using Tally.Infrastructure.Data;
+using Tally.Infrastructure.Messaging;
 using Tally.Infrastructure.PayPal;
+using Tally.Infrastructure.Webhooks;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -27,6 +29,9 @@ builder.Services.AddHttpClient("PayPal", (sp, client) =>
 builder.Services.AddSingleton<PayPalTokenProvider>();
 builder.Services.AddScoped<PayPalInvoiceClient>();
 builder.Services.AddScoped<InvoicingService>();
+builder.Services.AddSingleton<IWebhookQueue, InMemoryWebhookQueue>();
+builder.Services.AddScoped<PayPalEventHandler>();
+builder.Services.AddHostedService<WebhookProcessor>();
 
 var app = builder.Build();
 

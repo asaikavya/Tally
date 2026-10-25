@@ -4,9 +4,11 @@ import type { IAggFuncParams } from "ag-grid-community"
 // a mix → Partial; otherwise Due.
 export function familyStatus(p: IAggFuncParams): string {
     if (p.rowNode.level === -1) return ""
+    
   const s = p.values as string[]
   if (s.length === 0) return ""
   if (s.every((v) => v === "Paid")) return "Paid"
+ if (s.some((v) => v === "Says paid")) return "Says paid"
   const anyPaid = s.some((v) => v === "Paid" || v === "Partial")
   if (anyPaid) return "Partial"
   if (s.some((v) => v === "Late")) return "Late"

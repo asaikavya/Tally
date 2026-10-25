@@ -9,7 +9,7 @@ export type PaymentRow = {
   amountPaid: number
   remaining: number
   dueDate: string
-  status: "Paid" | "Partial" | "Late" | "Due"
+  status: "Paid" | "Partial" | "Says paid" | "Late" | "Due"
   paidVia: string
   payPalInvoiceId: string | null
   payPalStatus: string | null

@@ -77,6 +77,13 @@ namespace Tally.Infrastructure.Migrations
                     b.Property<Guid?>("InvoiceId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<DateTime?>("ParentSaysPaidAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ParentSaysPaidNote")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
                     b.Property<DateOnly>("PeriodStart")
                         .HasColumnType("date");
 
@@ -284,12 +291,20 @@ namespace Tally.Infrastructure.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
+                    b.Property<string>("PayToken")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
                     b.Property<string>("PreferredLanguage")
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("PayToken")
+                        .IsUnique();
 
                     b.ToTable("Payers");
                 });

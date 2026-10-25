@@ -8,11 +8,12 @@ export type HomeSummary = {
   lateCharges: number
 }
 export type NeedsYouItem = {
-  kind: "late"
+  kind: "late" | "parent-says-paid"
   payerId: string
   payerName: string
   country: string | null
   amount: number
   daysLate: number
   lines: string[]
+  note: string | null
 }

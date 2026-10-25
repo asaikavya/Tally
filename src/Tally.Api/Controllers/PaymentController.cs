@@ -32,7 +32,8 @@ public sealed class PaymentsController(TallyDbContext db) : ControllerBase
                 Plan = c.Enrollment!.PricePlan!.Frequency,
                 c.AmountDue,
                 c.AmountPaid,
-                c.DueDate
+                c.DueDate,
+                c.ParentSaysPaidAtUtc
             })
             .ToListAsync(ct);
 
@@ -60,9 +61,10 @@ public sealed class PaymentsController(TallyDbContext db) : ControllerBase
      {
          var remaining = c.AmountDue - c.AmountPaid;
          var status = remaining <= 0 ? "Paid"
-                    : c.AmountPaid > 0 ? "Partial"
-                    : c.DueDate < today ? "Late"
-                    : "Due";
+               : c.AmountPaid > 0 ? "Partial"
+               : c.ParentSaysPaidAtUtc != null ? "Says paid"
+               : c.DueDate < today ? "Late"
+               : "Due";
 
          var inv = c.InvoiceId is Guid id && invoices.TryGetValue(id, out var found)
              ? found

@@ -12,14 +12,14 @@ import { familyStatus, distinctJoin } from "./familyAgg"
 import { tallyGridTheme } from "./gridTheme"
 import type { PaymentRow } from "./types"
 
-const filters = ["All", "Paid", "Partial", "Late", "Due"] as const
+const filters = ["All", "Paid", "Partial", "Says paid", "Late", "Due"] as const
 type Filter = (typeof filters)[number]
 
-const shortDate = (v?: string) =>
-  v ? new Date(v + "T00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" }) : ""
 
 // Excel gets real currency cells, not text.
 const excelStyles: ExcelStyle[] = [{ id: "currency", numberFormat: { format: "$#,##0.00" } }]
+
+
 
 export function PaymentsPage() {
   const grid = useRef<AgGridReact<PaymentRow>>(null)
@@ -41,7 +41,6 @@ export function PaymentsPage() {
       cellClass: ["currency", "ag-right-aligned-cell"], valueFormatter: (p) => money(p.value ?? 0) },
     { field: "remaining", headerName: "Still due", aggFunc: "sum", type: "rightAligned", minWidth: 120,
       cellClass: ["currency", "ag-right-aligned-cell"], valueFormatter: (p) => money(p.value ?? 0) },
-    { field: "dueDate", headerName: "Due", maxWidth: 110, valueFormatter: (p) => shortDate(p.value) },
     { field: "status", headerName: "Status", aggFunc: "familyStatus", cellRenderer: StatusPill, minWidth: 120 },
     { field: "paidVia", headerName: "Paid via", aggFunc: "distinctJoin", minWidth: 110 },
     { headerName: "", colId: "actions", cellRenderer: ActionCell, minWidth: 140, maxWidth: 150,
@@ -64,7 +63,10 @@ export function PaymentsPage() {
   return (
     <main className="mx-auto flex max-w-7xl flex-col gap-5 p-8">
       <div className="flex flex-wrap items-end justify-between gap-3">
-        <h1 className="text-3xl font-extrabold tracking-tight">November payments</h1>
+      <div>
+          <h1 className="text-3xl font-extrabold tracking-tight">November payments</h1>
+          <p className="text-sm text-neutral-500">Bills were due Nov 10</p>
+        </div>
         <Button variant="outline" onClick={exportExcel}>Export to Excel</Button>
       </div>
 

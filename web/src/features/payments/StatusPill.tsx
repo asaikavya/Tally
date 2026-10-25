@@ -3,6 +3,7 @@ import type { CustomCellRendererProps } from "ag-grid-react"
 const styles: Record<string, string> = {
   Paid: "bg-[#E3F1E7] text-[#1E6B3A]",
   Partial: "bg-[#FBF0D9] text-[#7A4F00]",
+  "Says paid": "bg-[#ECE9F8] text-[#4A3F8F]",
   Late: "bg-[#FBE4DF] text-[#A8321F]",
   Due: "bg-neutral-100 text-neutral-700",
 }

@@ -24,5 +24,15 @@ namespace Tally.Domain.Entities
             AmountPaid += amount;
             Status = AmountPaid >= AmountDue ? ChargeStatus.Paid : ChargeStatus.Partial;
         }
+        public DateTime? ParentSaysPaidAtUtc { get; private set; }
+        public string? ParentSaysPaidNote { get; private set; }
+
+        // The parent says they paid outside PayPal. Not money yet: reminders pause and the owner checks.
+        public void MarkParentSaysPaid(DateTime atUtc, string? note)
+        {
+            if (Remaining <= 0) return;          // already paid, nothing to do
+            ParentSaysPaidAtUtc ??= atUtc;       // keep the first time they told us
+            ParentSaysPaidNote = note;
+        }
     }
 }

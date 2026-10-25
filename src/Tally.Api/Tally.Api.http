@@ -36,3 +36,9 @@ GET https://localhost:7218/api/home/needs-you?period=2026-11-01&asOf=2026-11-12
 
 ###
 GET https://localhost:7218/api/payments?period=2026-11-01&asOf=2026-11-12
+
+###
+GET https://localhost:7218/api/pay/PASTE-TOKEN-HERE?period=2026-11-01
+
+###
+GET https://localhost:7218/api/pay/wrong-token?period=2026-11-01

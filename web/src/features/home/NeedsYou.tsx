@@ -30,13 +30,16 @@ export function NeedsYou() {
       {items?.map((item) => (
         <div key={item.payerId} className="flex flex-wrap items-center gap-3 border-b border-neutral-100 px-5 py-4 last:border-b-0">
           <div className="min-w-0 flex-[1_1_320px]">
-            <div className="flex flex-wrap items-center gap-2 text-base font-semibold">
-              <Badge variant="destructive">Late</Badge>
+               <div className="flex flex-wrap items-center gap-2 text-base font-semibold">
+              {item.kind === "parent-says-paid"
+                ? <Badge className="bg-[#ECE9F8] text-[#4A3F8F]">Parent says paid</Badge>
+                : <Badge variant="destructive">Late</Badge>}
               {item.payerName} · {money(item.amount)}
             </div>
             <p className="mt-1 text-sm text-neutral-600">
-              {item.lines.join(" · ")} — {item.daysLate} {item.daysLate === 1 ? "day" : "days"} late
-              {item.country && item.country !== "US" ? ` · pays from ${item.country}` : ""}
+              {item.kind === "parent-says-paid"
+                ? `Says: ${item.note} — check your bank. Reminders are paused.`
+                : `${item.lines.join(" · ")} — ${item.daysLate} ${item.daysLate === 1 ? "day" : "days"} late${item.country && item.country !== "US" ? ` · pays from ${item.country}` : ""}`}
             </p>
           </div>
           <div className="flex flex-wrap gap-2">

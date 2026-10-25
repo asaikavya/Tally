@@ -8,4 +8,5 @@ public sealed record NeedsYouItemDto(
     string? Country,
     decimal Amount,
     int DaysLate,
-    IReadOnlyList<string> Lines);   // e.g. "Diego · Dance $90"
+    IReadOnlyList<string> Lines,
+    string? Note);   // e.g. "Diego · Dance $90"

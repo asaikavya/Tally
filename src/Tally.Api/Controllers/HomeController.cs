@@ -21,7 +21,7 @@ public sealed class HomeController(TallyDbContext db) : ControllerBase
 
         var charges = await db.Charges.AsNoTracking()
             .Where(c => c.PeriodStart == period)
-            .Select(c => new { c.AmountDue, c.AmountPaid, c.DueDate })
+            .Select(c => new { c.AmountDue, c.AmountPaid, c.DueDate, c.ParentSaysPaidAtUtc  })
             .ToListAsync(ct);
 
         var bySource = await (
@@ -33,7 +33,7 @@ public sealed class HomeController(TallyDbContext db) : ControllerBase
             select new { ViaPayPal = g.Key, Total = g.Sum(x => x.Amount) })
             .ToListAsync(ct);
 
-        var late = charges.Where(c => c.DueDate < today && c.AmountDue > c.AmountPaid).ToList();
+        var late = charges.Where(c => c.DueDate < today && c.AmountDue > c.AmountPaid && c.ParentSaysPaidAtUtc == null).ToList();
 
         return new HomeSummaryDto(
             period,
@@ -64,20 +64,23 @@ public sealed class HomeController(TallyDbContext db) : ControllerBase
                 Member = c.Enrollment!.Member!.Name,
                 Offering = c.Enrollment!.PricePlan!.Offering!.Name,
                 Owed = c.AmountDue - c.AmountPaid,
-                c.DueDate
+                c.DueDate,
+                c.ParentSaysPaidAtUtc,
+                c.ParentSaysPaidNote
             })
             .ToListAsync(ct);
 
         return rows
             .GroupBy(r => new { r.PayerId, r.PayerName, r.Country })
             .Select(g => new NeedsYouItemDto(
-                "late",
+                g.Any(r => r.ParentSaysPaidAtUtc != null) ? "parent-says-paid" : "late",
                 g.Key.PayerId,
                 g.Key.PayerName,
                 g.Key.Country,
                 g.Sum(r => r.Owed),
                 today.DayNumber - g.Min(r => r.DueDate).DayNumber,
-                g.Select(r => $"{r.Member} · {r.Offering} ${r.Owed:0}").ToList()))
+                g.Select(r => $"{r.Member} · {r.Offering} ${r.Owed:0}").ToList(),
+                g.Select(r => r.ParentSaysPaidNote).FirstOrDefault(n => n != null)))
             .OrderByDescending(i => i.Amount)
             .ToList();
     }

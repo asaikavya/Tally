@@ -46,6 +46,9 @@ public class TallyDbContext(DbContextOptions<TallyDbContext> options) : DbContex
         model.Entity<Payment>().HasIndex(p => p.ExternalId);
         model.Entity<Payment>().Property(p => p.Currency).HasMaxLength(3);
         model.Entity<Allocation>().Property(a => a.Reasons).HasMaxLength(1000);
+        // Family pay links: unique, short enough to index
+        model.Entity<Payer>().Property(p => p.PayToken).HasMaxLength(64);
+        model.Entity<Payer>().HasIndex(p => p.PayToken).IsUnique();
 
 
         // Never cascade-delete financial history

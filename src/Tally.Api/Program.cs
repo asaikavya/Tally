@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Tally.Infrastructure.Billing;
 using Tally.Infrastructure.Data;
+using Tally.Infrastructure.Demo;
 using Tally.Infrastructure.Messaging;
 using Tally.Infrastructure.PayPal;
 using Tally.Infrastructure.Webhooks;
@@ -32,6 +33,8 @@ builder.Services.AddScoped<InvoicingService>();
 builder.Services.AddSingleton<IWebhookQueue, InMemoryWebhookQueue>();
 builder.Services.AddScoped<PayPalEventHandler>();
 builder.Services.AddHostedService<WebhookProcessor>();
+builder.Services.AddOptions<DemoOptions>().Bind(builder.Configuration.GetSection(DemoOptions.Section));
+builder.Services.AddScoped<DemoResetService>();
 
 var app = builder.Build();
 
@@ -42,7 +45,8 @@ if (app.Environment.IsDevelopment())
 
     using var scope = app.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<TallyDbContext>();
-    await DemoSeeder.SeedAsync(db);
+    var demo = scope.ServiceProvider.GetRequiredService<IOptions<DemoOptions>>().Value;
+    await DemoSeeder.SeedIfEmptyAsync(db, demo.PayerEmail);
 }
 
 app.UseHttpsRedirection();

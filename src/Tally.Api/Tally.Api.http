@@ -42,3 +42,7 @@ GET https://localhost:7218/api/pay/PASTE-TOKEN-HERE?period=2026-11-01
 
 ###
 GET https://localhost:7218/api/pay/wrong-token?period=2026-11-01
+
+###
+POST https://localhost:7218/api/payers/01A1680E-B902-7062-ABFD-1696F7413A34/invoices?period=2026-11-01
+

@@ -5,6 +5,7 @@ import { money } from "@/lib/money"
 import type { HomeSummary } from "./types"
 import { q } from "@/lib/demo"
 import { NeedsYou } from "./NeedsYou"
+import { UploadReceiptButton } from "@/features/receipts/UploadReceiptButton"
 
 export function HomePage() {
   const [data, setData] = useState<HomeSummary | null>(null)
@@ -25,6 +26,7 @@ export function HomePage() {
         <p className="text-sm text-neutral-500">November</p>
         <h1 className="text-3xl font-extrabold tracking-tight">
           Every payment, <span className="text-[#1F5F8B]">accounted for.</span>
+           <UploadReceiptButton />
         </h1>
       </div>
 

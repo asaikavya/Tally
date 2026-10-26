@@ -6,6 +6,9 @@ using Tally.Infrastructure.Demo;
 using Tally.Infrastructure.Messaging;
 using Tally.Infrastructure.PayPal;
 using Tally.Infrastructure.Webhooks;
+using Tally.Ai;
+using Tally.Infrastructure.Receipts;
+using Tally.Infrastructure.Storage;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -35,6 +38,9 @@ builder.Services.AddScoped<PayPalEventHandler>();
 builder.Services.AddHostedService<WebhookProcessor>();
 builder.Services.AddOptions<DemoOptions>().Bind(builder.Configuration.GetSection(DemoOptions.Section));
 builder.Services.AddScoped<DemoResetService>();
+builder.Services.AddTallyAi(builder.Configuration);
+builder.Services.AddSingleton<IReceiptStore, LocalReceiptStore>();
+builder.Services.AddScoped<ReceiptIntakeService>();
 
 var app = builder.Build();
 

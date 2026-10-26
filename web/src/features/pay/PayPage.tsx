@@ -5,6 +5,7 @@ import { getJson, postJson } from "@/lib/api"
 import { money } from "@/lib/money"
 import { PERIOD } from "@/lib/demo"
 import type { PayPage as PayPageData } from "./types"
+import { postFile } from "@/lib/api"
 
 const methods = ["Zelle", "UPI", "Cash", "Check", "Other"] as const
 
@@ -99,8 +100,17 @@ export function PayPage() {
               <>
                 <h2 className="font-bold">Already paid another way?</h2>
                 <Button variant="outline" className="min-h-11" onClick={() => setShowForm(true)}>I already paid</Button>
-                <Button variant="ghost" className="min-h-11" disabled title="Coming soon">Upload a receipt</Button>
-              </>
+                                <label className="flex min-h-11 cursor-pointer items-center justify-center rounded-md border border-dashed border-neutral-400 font-medium hover:bg-neutral-50">
+                  Upload a receipt
+                  <input type="file" accept="image/png,image/jpeg,image/webp" className="hidden"
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0]
+                      if (!file) return
+                      try { await postFile(`/api/pay/${token}/receipt?period=${PERIOD}`, file); await load() }
+                      catch (err) { setError((err as Error).message) }
+                    }} />
+                </label>            
+                  </>
             ) : (
               <>
                 <h2 className="font-bold">How did you pay?</h2>

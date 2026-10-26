@@ -20,6 +20,7 @@ public class TallyDbContext(DbContextOptions<TallyDbContext> options) : DbContex
     public DbSet<Payment> Payments => Set<Payment>();
     public DbSet<Allocation> Allocations => Set<Allocation>();
     public DbSet<WebhookEvent> WebhookEvents => Set<WebhookEvent>();
+    public DbSet<Receipt> Receipts => Set<Receipt>();
 
     protected override void ConfigureConventions(ModelConfigurationBuilder builder)
     {
@@ -49,6 +50,12 @@ public class TallyDbContext(DbContextOptions<TallyDbContext> options) : DbContex
         // Family pay links: unique, short enough to index
         model.Entity<Payer>().Property(p => p.PayToken).HasMaxLength(64);
         model.Entity<Payer>().HasIndex(p => p.PayToken).IsUnique();
+        // Receipts: fast duplicate checks
+        model.Entity<Receipt>().HasIndex(r => r.ImageHash);
+        model.Entity<Receipt>().HasIndex(r => r.Reference);
+        model.Entity<Receipt>().Property(r => r.ImageHash).HasMaxLength(64);
+        model.Entity<Receipt>().Property(r => r.AiRaw).HasColumnType("nvarchar(max)");
+        model.Entity<Receipt>().Property(r => r.Currency).HasMaxLength(3);
 
 
         // Never cascade-delete financial history

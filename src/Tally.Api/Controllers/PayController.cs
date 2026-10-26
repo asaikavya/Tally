@@ -2,13 +2,14 @@
 using Microsoft.EntityFrameworkCore;
 using Tally.Api.Contracts;
 using Tally.Infrastructure.Data;
+using Tally.Infrastructure.Receipts;
 
 namespace Tally.Api.Controllers;
 
 // Public pages for families. The token in the URL is the only key, so every query filters by it.
 [ApiController]
 [Route("api/pay/{token}")]
-public sealed class PayController(TallyDbContext db) : ControllerBase
+public sealed class PayController(TallyDbContext db, ReceiptIntakeService intake) : ControllerBase
 {
     // GET api/pay/{token}?period=2026-11-01
     [HttpGet]
@@ -73,5 +74,32 @@ public sealed class PayController(TallyDbContext db) : ControllerBase
 
         await db.SaveChangesAsync(ct);
         return NoContent();
+    }
+    // POST api/pay/{token}/receipt?period=2026-11-01  (multipart, field "file")
+    [HttpPost("receipt")]
+    [RequestSizeLimit(ReceiptIntakeService.MaxBytes + 64 * 1024)]
+    public async Task<IActionResult> UploadReceipt(string token, [FromQuery] DateOnly period, IFormFile file, CancellationToken ct)
+    {
+        var payerId = await db.Payers.Where(p => p.PayToken == token).Select(p => (Guid?)p.Id).FirstOrDefaultAsync(ct);
+        if (payerId is null) return NotFound();
+
+        try
+        {
+            await using var stream = file.OpenReadStream();
+            await intake.UploadAsync(stream, file.ContentType, "parent", payerId, ct);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+
+        // A receipt from the family's own link also counts as "I already paid".
+        var open = await db.Charges
+            .Where(c => c.PeriodStart == period && c.Enrollment!.Member!.PayerId == payerId && c.AmountDue > c.AmountPaid)
+            .ToListAsync(ct);
+        foreach (var charge in open) charge.MarkParentSaysPaid(DateTime.UtcNow, "Uploaded a receipt");
+        await db.SaveChangesAsync(ct);
+
+        return Accepted();   // parents don't see AI details, just "thanks"
     }
 }

@@ -45,4 +45,14 @@ GET https://localhost:7218/api/pay/wrong-token?period=2026-11-01
 
 ###
 POST https://localhost:7218/api/payers/01A1680E-B902-7062-ABFD-1696F7413A34/invoices?period=2026-11-01
+###
+POST https://localhost:7218/api/receipts
+Content-Type: multipart/form-data; boundary=TallyBoundary
+
+--TallyBoundary
+Content-Disposition: form-data; name="file"; filename="zelle-r-kumar-170.png"
+Content-Type: image/png
+
+< ../../samples/receipts/zelle-r-kumar-170.png
+--TallyBoundary--
 

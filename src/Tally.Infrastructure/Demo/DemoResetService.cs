@@ -40,7 +40,9 @@ public sealed class DemoResetService(
             await db.Locations.ExecuteDeleteAsync(ct);
             await db.Organizers.ExecuteDeleteAsync(ct);
             await db.WebhookEvents.ExecuteDeleteAsync(ct);
+            await db.Receipts.ExecuteDeleteAsync(ct);
             await tx.CommitAsync(ct);
+            
         }
         db.ChangeTracker.Clear();
 

@@ -1,6 +1,12 @@
-﻿<Solution>
+<Solution>
   <Folder Name="/Docs/">
     <File Path="decisions.md" />
+  </Folder>
+  <Folder Name="/samples/" />
+  <Folder Name="/samples/receipts/">
+    <File Path="samples/receipts/transfer-paid-to-academy-90.png" />
+    <File Path="samples/receipts/zelle-r-kumar-150.png" />
+    <File Path="samples/receipts/zelle-r-kumar-170.png" />
   </Folder>
   <Folder Name="/src/">
     <Project Path="src/Tally.Ai/Tally.Ai.csproj" />

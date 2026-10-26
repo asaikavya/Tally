@@ -16,7 +16,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Tally.Domain\Tally.Domain.csproj" />
     <ProjectReference Include="..\Tally.Infrastructure\Tally.Infrastructure.csproj" />
     <ProjectReference Include="..\Tally.Ai\Tally.Ai.csproj" />
   </ItemGroup>

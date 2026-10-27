@@ -124,4 +124,35 @@ public sealed class ReceiptIntakeService(
         }
 
     }
+    // For receipts the AI couldn't read (e.g. a timeout): read the saved image again.
+    public async Task<Receipt?> ReadAgainAsync(Guid id, CancellationToken ct)
+    {
+        var r = await db.Receipts.FindAsync([id], ct);
+        if (r is null) return null;
+        if (r.AiRaw is not null) return r;                     // already read: never overwrite the owner's corrections
+
+        using var ms = new MemoryStream();
+        await using (var file = store.OpenRead(r.StorageKey)) await file.CopyToAsync(ms, ct);
+
+        try
+        {
+            var f = await reader.ReadAsync(ms.ToArray(), r.ContentType, ct);
+            r.AiRaw = JsonSerializer.Serialize(f);
+            r.Amount = f.Amount; r.Currency = f.Currency;
+            r.PaidOn = DateOnly.TryParseExact(f.PaidOn, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var d) ? d : null;
+            r.SenderName = f.SenderName; r.PaidTo = f.PaidTo; r.Memo = f.Memo; r.Reference = f.Reference; r.Method = f.Method;
+            (r.Status, r.Problem) = !f.LooksLikePaymentReceipt ? (ReceiptStatus.NeedsReview, "This doesn't look like a payment receipt.")
+                                 : f.Amount is null or <= 0 ? (ReceiptStatus.NeedsReview, "We couldn't read the amount. Please type it.")
+                                 : (ReceiptStatus.Read, (string?)null);
+        }
+        catch (Exception ex)
+        {
+            log.LogWarning(ex, "AI still could not read receipt {ReceiptId}", r.Id);
+            r.Problem = "Still couldn't read it. Please try again in a minute, or type the details.";
+        }
+
+        await MarkIfDuplicateAsync(r, ct);
+        await db.SaveChangesAsync(ct);
+        return r;
+    }
 }

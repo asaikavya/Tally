@@ -32,7 +32,7 @@ export function AppShell() {
       if (!res.ok) throw new Error(String(res.status))
       const result = await res.json()
       try { sessionStorage.setItem("tally-reset", JSON.stringify(result)) } catch { /* storage blocked: skip the message */ }
-      window.location.reload()
+            window.location.assign("/")   // the page you were on may not exist after a reset
     } catch {
       setResetting(false)
       alert("Reset failed. Check that the API is running.")

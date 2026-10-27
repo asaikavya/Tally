@@ -14,4 +14,5 @@ export type Receipt = {
   problem: string | null
   duplicateOfId: string | null
   edited: string[]
+ aiRead: boolean
 }

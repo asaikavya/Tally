@@ -14,7 +14,8 @@ using Tally.Infrastructure.Storage;
 var builder = WebApplication.CreateBuilder(args);
 
 // 1. Register services (all BEFORE builder.Build())
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(o => o.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter()));
 builder.Services.AddOpenApi();
 builder.Services.AddDbContext<TallyDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("TallyDb")));
@@ -41,6 +42,7 @@ builder.Services.AddScoped<DemoResetService>();
 builder.Services.AddTallyAi(builder.Configuration);
 builder.Services.AddSingleton<IReceiptStore, LocalReceiptStore>();
 builder.Services.AddScoped<ReceiptIntakeService>();
+builder.Services.AddScoped<DetectiveService>();
 
 var app = builder.Build();
 

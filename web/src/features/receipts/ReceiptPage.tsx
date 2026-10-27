@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button"
 import { getJson, putJson } from "@/lib/api"
 import { money } from "@/lib/money"
 import type { Receipt } from "./types"
+import { DetectivePanel } from "./DetectivePanel"
 
 type Form = { amount: string; paidOn: string; senderName: string; memo: string; reference: string }
 const toForm = (r: Receipt): Form => ({
@@ -33,7 +34,22 @@ export function ReceiptPage() {
     })
     setR(updated); setForm(toForm(updated)); setEditing(false)
   }
+    const [reading, setReading] = useState(false)
+  const readAgain = async () => {
+    setReading(true)
+    try {
+      const res = await fetch(`/api/receipts/${id}/read-again`, { method: "POST" })
+      if (res.ok) { const x = (await res.json()) as Receipt; setR(x); setForm(toForm(x)) }
+    } finally { setReading(false) }
+  }
 
+   if (error?.startsWith("404"))
+    return (
+      <div className="flex flex-col gap-3 p-8">
+        <p className="text-neutral-700">This receipt isn't here anymore. It may have been cleared by a demo reset.</p>
+        <Link to="/" className="font-semibold text-[#1F5F8B]">← Back to Home</Link>
+      </div>
+    )
   if (error) return <p className="p-8 text-red-700">Couldn't load receipt: {error}</p>
   if (!r || !form) return <p className="p-8 text-neutral-500">Loading…</p>
 
@@ -45,8 +61,8 @@ export function ReceiptPage() {
       {editing
         ? <input id={key} type={type} value={form[key]} onChange={(e) => setForm({ ...form, [key]: e.target.value })}
                  className="min-h-11 rounded-lg border border-neutral-300 px-3" />
-        : <div className="min-h-8 font-medium">{shown || <span className="text-neutral-400">not on the receipt</span>}</div>}
-    </div>
+           : <div className="min-h-8 font-medium">{shown || <span className="text-neutral-400">{r.aiRead ? "not on the receipt" : "not read yet"}</span>}</div>}
+           </div>
   )
 
   return (
@@ -55,8 +71,12 @@ export function ReceiptPage() {
       <h1 className="text-3xl font-extrabold tracking-tight">Receipt</h1>
 
       {r.status === "Duplicate" && <p className="rounded-lg bg-[#FBE4DF] p-3 text-[#A8321F]">{r.problem} Nothing new will be recorded.</p>}
-      {r.status === "NeedsReview" && <p className="rounded-lg bg-[#FBF0D9] p-3 text-[#7A4F00]">{r.problem}</p>}
-
+     {r.status === "NeedsReview" && (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg bg-[#FBF0D9] p-3 text-[#7A4F00]">
+          <span>{r.problem}</span>
+          {!r.aiRead && <Button variant="outline" disabled={reading} onClick={readAgain}>{reading ? "Reading…" : "Try reading again"}</Button>}
+        </div>
+      )}
       <div className="flex flex-wrap items-start gap-6">
         <div className="flex-[1_1_300px] rounded-2xl bg-[#F1EFEA] p-5">
           <img src={`/api/receipts/${r.id}/image`} alt="Uploaded receipt"
@@ -83,11 +103,9 @@ export function ReceiptPage() {
           <p className="text-xs text-neutral-500">
             AI read the receipt image only. It never sees your families list; matching is Tally's own code.
           </p>
-          <div className="rounded-xl border border-dashed border-neutral-300 p-4 text-sm text-neutral-500">
-            Payment Detective (who paid, which classes) arrives in the next step.
-          </div>
         </section>
       </div>
+            <DetectivePanel key={`${r.amount}-${r.senderName}-${r.memo}`} receiptId={r.id} status={r.status} />
     </main>
   )
 }

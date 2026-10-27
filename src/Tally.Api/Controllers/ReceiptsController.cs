@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Tally.Api.Contracts;
+using Tally.Domain.Matching;
 using Tally.Infrastructure.Data;
 using Tally.Infrastructure.Receipts;
 using Tally.Infrastructure.Storage;
@@ -47,6 +48,20 @@ public sealed class ReceiptsController(ReceiptIntakeService intake, TallyDbConte
     public async Task<ActionResult<ReceiptDto>> Correct(Guid id, ReceiptCorrection body, CancellationToken ct)
     {
         var r = await intake.CorrectAsync(id, body, ct);
+        return r is null ? NotFound() : ReceiptDto.From(r);
+    }
+    // GET api/receipts/{id}/detective
+    [HttpGet("{id:guid}/detective")]
+    public async Task<ActionResult<DetectiveResult>> Detective(Guid id, [FromServices] DetectiveService detective, CancellationToken ct)
+    {
+        var result = await detective.InvestigateAsync(id, ct);
+        return result is null ? NotFound() : result;
+    }
+    // POST api/receipts/{id}/read-again
+    [HttpPost("{id:guid}/read-again")]
+    public async Task<ActionResult<ReceiptDto>> ReadAgain(Guid id, CancellationToken ct)
+    {
+        var r = await intake.ReadAgainAsync(id, ct);
         return r is null ? NotFound() : ReceiptDto.From(r);
     }
 }

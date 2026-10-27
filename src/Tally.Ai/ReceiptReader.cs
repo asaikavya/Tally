@@ -25,8 +25,28 @@ public sealed class ReceiptReader(IChatCompletionService chat, ILogger<ReceiptRe
         """;
 
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
+    // Temporary failures (timeouts, overload, rate limit) usually pass in seconds: try up to 3 times.
+    private static readonly int[] Transient = [408, 429, 500, 502, 503, 504];
 
     public async Task<ReceiptFields> ReadAsync(byte[] image, string contentType, CancellationToken ct)
+    {
+        for (var attempt = 1; ; attempt++)
+        {
+            try
+            {
+                return await ReadOnceAsync(image, contentType, ct);
+            }
+            catch (HttpOperationException ex) when (attempt < 3 && ex.StatusCode is { } code && Transient.Contains((int)code))
+            {
+                var wait = TimeSpan.FromSeconds(attempt * 2);     // 2s, then 4s
+                log.LogWarning("AI call failed with {Status}; retrying in {Seconds}s (attempt {Attempt})",
+                    (int)code, wait.TotalSeconds, attempt);
+                await Task.Delay(wait, ct);
+            }
+        }
+    }
+
+    public async Task<ReceiptFields> ReadOnceAsync(byte[] image, string contentType, CancellationToken ct)
     {
         var history = new ChatHistory(Instructions);
         history.AddUserMessage(new ChatMessageContentItemCollection

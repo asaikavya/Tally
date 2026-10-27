@@ -56,3 +56,20 @@ Content-Type: image/png
 < ../../samples/receipts/zelle-r-kumar-170.png
 --TallyBoundary--
 
+###
+
+POST https://localhost:7218/api/receipts/01a17c3f-53f6-7956-8dd5-825091eb6bd7/approve
+Content-Type: application/json
+
+{
+  "payerId": "01a17c3f-1149-7259-aef4-56dedabe4982",
+  "chargeIds": [
+    "01a17c3f-114a-736c-b4ca-6fc9d5e9b9bd",
+    "01a17c3f-114a-7365-a90f-4998170c57a8"
+  ]
+}
+###
+POST https://localhost:7218/api/receipts/01a17c3f-53f6-7956-8dd5-825091eb6bd7/undo
+
+###
+   POST https://localhost:7218/api/demo/sync

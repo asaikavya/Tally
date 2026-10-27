@@ -53,7 +53,7 @@ public static class AllocationSolver
         {
             var chosen = Pick(open, exact[0]);
             var ev = new List<Evidence> {
-                new(Strength.Strong, $"Only {LabelOf(chosen, open)} adds up to exactly {Text.Money(amount)}(checked {checkedCount} {(checkedCount == 1 ? "combination" : "combinations") })") };
+                new(Strength.Strong, $"Only {LabelOf(chosen, open)} adds up to exactly {Text.Money(amount)} (checked {checkedCount} {(checkedCount == 1 ? "combination" : "combinations") })") };
             if (MemoEvidence(memo, chosen, open) is { } m) ev.Add(m);
             return new(CoverageKind.Exact, [Full(chosen, total, amount)], tried, checkedCount, ev);
         }

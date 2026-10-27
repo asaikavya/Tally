@@ -24,6 +24,14 @@ namespace Tally.Domain.Entities
             AmountPaid += amount;
             Status = AmountPaid >= AmountDue ? ChargeStatus.Paid : ChargeStatus.Partial;
         }
+        public void ReversePayment(decimal amount)               // the ONLY way to take money back (Undo)
+        {
+            if (amount <= 0 || amount > AmountPaid) throw new ArgumentOutOfRangeException(nameof(amount));
+            AmountPaid -= amount;
+            Status = AmountPaid == 0 ? ChargeStatus.Pending
+                   : AmountPaid >= AmountDue ? ChargeStatus.Paid
+                   : ChargeStatus.Partial;
+        }
         public DateTime? ParentSaysPaidAtUtc { get; private set; }
         public string? ParentSaysPaidNote { get; private set; }
 

@@ -40,9 +40,14 @@ public sealed class PayPalEventHandler(TallyDbContext db, PayPalInvoiceClient pa
 
         var charges = await db.Charges.Where(c => c.InvoiceId == invoice.Id).ToListAsync(ct);
 
+        // Payments Tally itself noted on this bill ("paid outside PayPal") are already in Tally: skip them.
+        var ours = await db.PayPalNotes.Where(n => n.InvoiceId == invoice.Id)
+                                       .Select(n => n.PayPalPaymentId).ToListAsync(ct);
+
         foreach (var tx in current.Payments?.Transactions ?? [])
         {
             if (tx.PaymentId is null || tx.Amount is null) continue;
+            if (ours.Contains(tx.PaymentId)) continue;
             if (await db.Payments.AnyAsync(p => p.ExternalId == tx.PaymentId, ct)) continue;   // already recorded
 
             var amount = decimal.Parse(tx.Amount.Value, CultureInfo.InvariantCulture);

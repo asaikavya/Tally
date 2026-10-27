@@ -57,6 +57,22 @@ public sealed class ReceiptsController(ReceiptIntakeService intake, TallyDbConte
         var result = await detective.InvestigateAsync(id, ct);
         return result is null ? NotFound() : result;
     }
+    [HttpPost("{id:guid}/approve")]
+    public async Task<IActionResult> Approve(Guid id, ApproveRequest req,
+    [FromServices] ApprovalService approvals, CancellationToken ct)
+    => ToResult(await approvals.ApproveAsync(id, req, ct));
+
+    [HttpPost("{id:guid}/undo")]
+    public async Task<IActionResult> Undo(Guid id,
+        [FromServices] ApprovalService approvals, CancellationToken ct)
+        => ToResult(await approvals.UndoAsync(id, ct));
+    [HttpGet("{id:guid}/approval")]
+    public async Task<IActionResult> Approval(Guid id, [FromServices] ApprovalService approvals, CancellationToken ct)
+    => await approvals.GetAsync(id, ct) is { } r ? Ok(r) : NotFound();
+    private IActionResult ToResult(ApprovalOutcome o) =>
+        !o.Found ? NotFound()
+        : o.Problem is not null ? Conflict(new { problem = o.Problem })
+        : Ok(o.Result);
     // POST api/receipts/{id}/read-again
     [HttpPost("{id:guid}/read-again")]
     public async Task<ActionResult<ReceiptDto>> ReadAgain(Guid id, CancellationToken ct)
@@ -64,4 +80,8 @@ public sealed class ReceiptsController(ReceiptIntakeService intake, TallyDbConte
         var r = await intake.ReadAgainAsync(id, ct);
         return r is null ? NotFound() : ReceiptDto.From(r);
     }
+    [HttpPost("{id:guid}/paypal-note")]
+    public async Task<IActionResult> RetryPayPal(Guid id, [FromServices] ApprovalService approvals, CancellationToken ct)
+    => ToResult(await approvals.RetryPayPalAsync(id, ct));
+
 }

@@ -14,5 +14,7 @@ namespace Tally.Domain.Entities
         public string? SenderText { get; set; }                  // "R Kumar" as it appeared
         public string? ExternalId { get; set; }                  // PayPal or UPI reference
         public string? EvidenceUrl { get; set; }
+        public Guid? PayerId { get; set; }                       // which family sent it (for family credit)
+        public Guid? ReceiptId { get; set; }                     // the receipt it came from (for Undo)
     }
 }

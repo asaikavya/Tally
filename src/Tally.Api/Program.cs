@@ -43,6 +43,8 @@ builder.Services.AddTallyAi(builder.Configuration);
 builder.Services.AddSingleton<IReceiptStore, LocalReceiptStore>();
 builder.Services.AddScoped<ReceiptIntakeService>();
 builder.Services.AddScoped<DetectiveService>();
+builder.Services.AddScoped<ApprovalService>();
+builder.Services.AddScoped<PayPalNoteService>();
 
 var app = builder.Build();
 

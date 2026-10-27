@@ -27,6 +27,24 @@ public sealed class PayPalInvoiceClient(IHttpClientFactory httpFactory, PayPalTo
         using var request = await AuthorizedAsync(HttpMethod.Get, $"v2/invoicing/invoices/{invoiceId}", ct);
         return await SendAsync<InvoiceResponse>(request, ct);
     }
+    // "This much was paid outside PayPal." Returns PayPal's id for it (needed for Undo).
+    public async Task<string> RecordPaymentAsync(string invoiceId, RecordPaymentRequest body, string requestId, CancellationToken ct)
+    {
+        using var request = await AuthorizedAsync(HttpMethod.Post, $"v2/invoicing/invoices/{invoiceId}/payments", ct);
+        request.Headers.Add("PayPal-Request-Id", requestId);        // same id twice = PayPal won't record it twice
+        request.Content = JsonContent.Create(body, options: PayPalJson.Options);
+        var result = await SendAsync<RecordPaymentResponse>(request, ct);
+        return result.PaymentId;
+    }
+
+    // Undo: remove that recorded payment from the invoice.
+    public async Task DeletePaymentAsync(string invoiceId, string paymentId, CancellationToken ct)
+    {
+        using var request = await AuthorizedAsync(HttpMethod.Delete, $"v2/invoicing/invoices/{invoiceId}/payments/{paymentId}", ct);
+        using var response = await httpFactory.CreateClient("PayPal").SendAsync(request, ct);
+        if (response.StatusCode == System.Net.HttpStatusCode.NotFound) return;   // already gone: that's fine
+        await EnsureSuccessAsync(response, ct);
+    }
 
     private async Task<HttpRequestMessage> AuthorizedAsync(HttpMethod method, string path, CancellationToken ct)
     {

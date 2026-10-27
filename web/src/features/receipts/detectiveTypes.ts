@@ -14,3 +14,6 @@ export type DetectiveResult = {
   verdict: "Suggested" | "ChooseFamily" | "ChooseClasses" | "NoMatch"
   headline: string; best: Finding | null; candidates: Finding[]; ruledOut: string[]
 }
+export type AppliedLine = { chargeId: string; student: string; offering: string; applied: number; stillDue: number }
+export type PayPalStep = { payPalInvoiceId: string; amount: number; noted: boolean; statusBefore: string | null; statusAfter: string | null }
+export type ApproveResult = { paymentId: string; amount: number; applied: number; credit: number; lines: AppliedLine[]; payPal: PayPalStep[] }

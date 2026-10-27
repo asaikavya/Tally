@@ -27,6 +27,7 @@ public sealed class DemoResetService(
         await using (var tx = await db.Database.BeginTransactionAsync(ct))
         {
             await db.Allocations.ExecuteDeleteAsync(ct);
+            await db.PayPalNotes.ExecuteDeleteAsync(CancellationToken.None);
             await db.Payments.ExecuteDeleteAsync(ct);
             await db.Charges.ExecuteDeleteAsync(ct);
             await db.Invoices.ExecuteDeleteAsync(ct);

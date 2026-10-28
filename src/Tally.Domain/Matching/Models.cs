@@ -14,7 +14,10 @@ public sealed record ReceiptFacts(decimal Amount, string? SenderName, string? Me
 
 internal static class Text
 {
-    public static string Money(decimal d) => "$" + d.ToString("#,0.##", CultureInfo.InvariantCulture);
+    public static string Money(decimal amount) =>
+    amount % 1 == 0
+        ? "$" + amount.ToString("#,0", System.Globalization.CultureInfo.InvariantCulture)
+        : "$" + amount.ToString("#,0.00", System.Globalization.CultureInfo.InvariantCulture);
     public static string Day(DateOnly d) => d.ToString("MMM d", CultureInfo.InvariantCulture);
     public static string First(string name) => name.Split(' ', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? name;
 

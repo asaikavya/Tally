@@ -68,18 +68,29 @@ public static class AllocationSolver
                 [new(Strength.Weak, $"{exact.Count} different combinations add up to {Text.Money(amount)}. Please choose")]);
         }
 
-        // Close: a fee or rounding (within 2%, at most $5).
-        var tolerance = Math.Min(Math.Round(amount * 0.02m, 2), 5m);
-        var close = combos.Where(c => Math.Abs(c.Sum - amount) <= tolerance)
+        // Close: a fee or rounding. Within 2% of what was billed for that combination, at most $5.
+        static decimal Tolerance(decimal billed) => Math.Min(Math.Round(billed * 0.02m, 2), 5m);
+        var close = combos.Where(c => Math.Abs(c.Sum - amount) <= Tolerance(c.Sum))
                           .OrderBy(c => Math.Abs(c.Sum - amount)).ThenByDescending(c => PopCount(c.Mask)).ToList();
         if (close.Count > 0)
         {
             var best = close[0];
             var chosen = Pick(open, best.Mask);
             var diff = amount - best.Sum;
+
+            // Show what will really be applied: if less arrived, fill oldest first (same as Approve does).
+            var lines = new List<AllocationLine>();
+            var left = Math.Min(amount, best.Sum);
+            foreach (var c in chosen)
+            {
+                var share = Math.Min(c.Remaining, left);
+                lines.Add(Line(c, share));
+                left -= share;
+            }
+
             var note = diff < 0 ? $"Received {Text.Money(-diff)} less than these charges" : $"Received {Text.Money(diff)} more than these charges";
             return new(CoverageKind.Close,
-                [new(chosen.Select(c => Line(c, c.Remaining)).ToList(), Math.Max(diff, 0), total - amount + Math.Max(diff, 0), note)],
+                [new(lines, Math.Max(diff, 0), total - amount + Math.Max(diff, 0), note)],
                 tried, checkedCount,
                 [new(Strength.Medium, $"{Text.Money(amount)} is within {Text.Money(Math.Abs(diff))} of {LabelOf(chosen, open)} ({Text.Money(best.Sum)}), maybe a fee or rounding")]);
         }

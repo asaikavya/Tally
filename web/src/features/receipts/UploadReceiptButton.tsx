@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button"
 import { postFile } from "@/lib/api"
 import type { Receipt } from "./types"
 
+
 export function UploadReceiptButton() {
   const input = useRef<HTMLInputElement>(null)
   const navigate = useNavigate()

@@ -121,4 +121,16 @@ public class PaymentDetectiveTests
         Assert.Null(result.Best);                           // never guesses
         Assert.Equal(2, result.Candidates.Count(c => c.Coverage.Kind == CoverageKind.Exact));
     }
+    [Fact]
+    public void Close_match_uses_two_percent_of_the_bill_not_of_the_payment()
+    {
+        var dance = new OpenCharge(Guid.NewGuid(), Guid.NewGuid(), "Diego Lopez", "Dance", 90m, new DateOnly(2026, 11, 10));
+
+        var result = AllocationSolver.Solve(88.20m, [dance]);
+
+        Assert.Equal(CoverageKind.Close, result.Kind);
+        var line = Assert.Single(result.Options[0].Lines);
+        Assert.Equal(88.20m, line.Amount);                  // what really arrived, not $90
+        Assert.Equal(1.80m, result.Options[0].StillDueAfter);
+    }
 }

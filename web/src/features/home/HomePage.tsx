@@ -6,7 +6,7 @@ import type { HomeSummary } from "./types"
 import { q } from "@/lib/demo"
 import { NeedsYou } from "./NeedsYou"
 import { UploadReceiptButton } from "@/features/receipts/UploadReceiptButton"
-
+import { SampleReceipts } from "./SampleReceipts"
 export function HomePage() {
   const [data, setData] = useState<HomeSummary | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -53,6 +53,7 @@ export function HomePage() {
           </CardContent>
         </Card>
       </div>
+      <SampleReceipts />
       <NeedsYou />
     </main>
   )

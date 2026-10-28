@@ -1,6 +1,7 @@
 import type { CustomCellRendererProps } from "ag-grid-react"
 import type { PaymentRow } from "./types"
 import { paypalStatusLabel } from "@/lib/paypalStatus"
+import { money } from "@/lib/money"
 
 export function FamilyCell(props: CustomCellRendererProps<PaymentRow>) {
       if (props.node.footer) return <strong>November total</strong>
@@ -18,7 +19,15 @@ export function FamilyCell(props: CustomCellRendererProps<PaymentRow>) {
           PayPal · {paypalStatusLabel[first.payPalStatus] ?? first.payPalStatus.toLowerCase()}
         </span>
       )}
+            {(first?.familyCredit ?? 0) > 0 && (
+        <span title="Paid more than was billed. Kept for the next bill."
+          className="whitespace-nowrap rounded border border-[#B7DCC3] bg-[#EEF8F1] px-2 py-0.5 text-xs font-semibold text-[#1E6B3A]">
+          {money(first!.familyCredit)} credit
+        </span>
+      )}
       
     </span>
+    
+    
   )
 }

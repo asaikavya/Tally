@@ -15,4 +15,5 @@ public sealed record PaymentRowDto(
     string Status,        // Paid / Partial / Late / Due
     string PaidVia,
     string? PayPalInvoiceId,   // e.g. "INV2-26PV-HP78-UH2P-6WL9"; null if not billed yet
-    string? PayPalStatus);      // "PayPal", "Zelle", "PayPal + Zelle", or ""
+    string? PayPalStatus,
+    decimal FamilyCredit);      // "PayPal", "Zelle", "PayPal + Zelle", or ""

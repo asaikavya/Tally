@@ -13,4 +13,5 @@ export type PaymentRow = {
   paidVia: string
   payPalInvoiceId: string | null
   payPalStatus: string | null
+familyCredit: number
 }

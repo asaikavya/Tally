@@ -2,6 +2,8 @@
 using Microsoft.EntityFrameworkCore;
 using Tally.Api.Contracts;
 using Tally.Infrastructure.Data;
+using Tally.Infrastructure.Receipts;
+using Tally.Infrastructure.Payments;
 
 namespace Tally.Api.Controllers;
 
@@ -54,6 +56,19 @@ public sealed class PaymentsController(TallyDbContext db) : ControllerBase
         var invoices = await db.Invoices.AsNoTracking()
             .Where(i => invoiceIds.Contains(i.Id))
             .ToDictionaryAsync(i => i.Id, i => (i.PayPalInvoiceId, i.PayPalStatus), ct);
+        // 4) Family credit: money a family sent beyond what it was applied to (e.g. $300 for $270 → $30).
+        var payerIds = charges.Select(c => c.PayerId).Distinct().ToList();
+        var leftovers = await db.Payments.AsNoTracking()
+            .Where(p => p.PayerId != null && payerIds.Contains(p.PayerId.Value))
+            .Select(p => new
+            {
+                PayerId = p.PayerId!.Value,
+                Left = p.Amount - (db.Allocations.Where(a => a.PaymentId == p.Id).Sum(a => (decimal?)a.Amount) ?? 0m)
+            })
+            .ToListAsync(ct);
+        var creditByPayer = leftovers.Where(x => x.Left > 0)
+            .GroupBy(x => x.PayerId)
+            .ToDictionary(g => g.Key, g => g.Sum(x => x.Left));
 
         // 3) Status is decided here, once, so every screen agrees.
         return charges
@@ -74,9 +89,23 @@ public sealed class PaymentsController(TallyDbContext db) : ControllerBase
              c.Id, c.PayerId, c.Family, c.Student, c.Offering, c.Plan.ToString(),
              c.AmountDue, c.AmountPaid, remaining, c.DueDate, status,
              viaByCharge.GetValueOrDefault(c.Id, ""),
-             inv.Item1, inv.Item2);
+             inv.Item1, inv.Item2, creditByPayer.GetValueOrDefault(c.PayerId));
      })
      .OrderBy(r => r.Family).ThenBy(r => r.Student)
      .ToList();
     }
+    [HttpPost("manual")]
+    public async Task<IActionResult> RecordManual(ManualPaymentRequest req,
+    [FromServices] ManualPaymentService manual, CancellationToken ct)
+    => ToResult(await manual.RecordAsync(req, ct));
+
+    [HttpPost("{id:guid}/undo")]
+    public async Task<IActionResult> UndoManual(Guid id,
+        [FromServices] ManualPaymentService manual, CancellationToken ct)
+        => ToResult(await manual.UndoAsync(id, ct));
+
+    private IActionResult ToResult(ApprovalOutcome o) =>
+        !o.Found ? NotFound()
+        : o.Problem is not null ? Conflict(new { problem = o.Problem })
+        : Ok(o.Result);
 }

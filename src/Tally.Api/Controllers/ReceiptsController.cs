@@ -47,8 +47,15 @@ public sealed class ReceiptsController(ReceiptIntakeService intake, TallyDbConte
     [HttpPut("{id:guid}")]
     public async Task<ActionResult<ReceiptDto>> Correct(Guid id, ReceiptCorrection body, CancellationToken ct)
     {
-        var r = await intake.CorrectAsync(id, body, ct);
-        return r is null ? NotFound() : ReceiptDto.From(r);
+        try
+        {
+            var r = await intake.CorrectAsync(id, body, ct);
+            return r is null ? NotFound() : Ok(ReceiptDto.From(r));
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Conflict(new { problem = ex.Message });
+        }
     }
     // GET api/receipts/{id}/detective
     [HttpGet("{id:guid}/detective")]

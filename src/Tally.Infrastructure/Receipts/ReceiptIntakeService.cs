@@ -84,6 +84,8 @@ public sealed class ReceiptIntakeService(
     {
         var r = await db.Receipts.FindAsync([id], ct);
         if (r is null) return null;
+        if (r.Status == ReceiptStatus.Matched)
+            throw new InvalidOperationException("This receipt is approved. Undo the approval first, then fix it.");
 
         var edited = new HashSet<string>((r.EditedFields ?? "").Split(',', StringSplitOptions.RemoveEmptyEntries));
         if (c.Amount != r.Amount) { r.Amount = c.Amount; edited.Add("Amount"); }
@@ -106,15 +108,20 @@ public sealed class ReceiptIntakeService(
 
 
     // Same image, or same reference already on a receipt or a recorded payment → duplicate.
+    // Same image, or same reference already on an EARLIER receipt or on another recorded payment → duplicate.
     private async Task MarkIfDuplicateAsync(Receipt r, CancellationToken ct)
     {
         var earlier = await db.Receipts.AsNoTracking()
-            .Where(x => x.Id != r.Id && (x.ImageHash == r.ImageHash || (r.Reference != null && x.Reference == r.Reference)))
+            .Where(x => x.Id != r.Id
+                     && x.UploadedAtUtc < r.UploadedAtUtc            // only an earlier receipt can be "the original"
+                     && x.Status != ReceiptStatus.Duplicate          // a duplicate is never the original
+                     && (x.ImageHash == r.ImageHash || (r.Reference != null && x.Reference == r.Reference)))
             .OrderBy(x => x.UploadedAtUtc)
             .Select(x => (Guid?)x.Id)
             .FirstOrDefaultAsync(ct);
 
-        var paymentExists = r.Reference != null && await db.Payments.AnyAsync(p => p.ExternalId == r.Reference, ct);
+        var paymentExists = r.Reference != null
+            && await db.Payments.AnyAsync(p => p.ExternalId == r.Reference && p.ReceiptId != r.Id, ct);   // not its own payment
 
         if (earlier is not null || paymentExists)
         {
@@ -122,7 +129,6 @@ public sealed class ReceiptIntakeService(
             r.DuplicateOfId = earlier;
             r.Problem = "This receipt was already recorded.";
         }
-
     }
     // For receipts the AI couldn't read (e.g. a timeout): read the saved image again.
     public async Task<Receipt?> ReadAgainAsync(Guid id, CancellationToken ct)

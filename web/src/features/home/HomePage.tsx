@@ -12,7 +12,8 @@ import { ReviewInbox } from "./ReviewInbox"
 export function HomePage() {
   const [data, setData] = useState<HomeSummary | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [version, setVersion] = useState(0)        // goes up after every approval
+   const [version, setVersion] = useState(0)        // goes up after every approval
+  const bump = () => setVersion((v) => v + 1)
 
   useEffect(() => {
     getJson<HomeSummary>(`/api/home?${q}`)
@@ -59,8 +60,8 @@ export function HomePage() {
         </Card>
       </div>
       <SampleReceipts />
-      <ReviewInbox onApproved={() => setVersion((v) => v + 1)}/>
-      <NeedsYou key={version} />
+          <ReviewInbox version={version} onApproved={bump} />
+      <NeedsYou version={version} onChanged={bump} />
     </main>
   )
 }

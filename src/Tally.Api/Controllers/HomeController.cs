@@ -79,9 +79,10 @@ public sealed class HomeController(TallyDbContext db) : ControllerBase
                 g.Key.Country,
                 g.Sum(r => r.Owed),
                 today.DayNumber - g.Min(r => r.DueDate).DayNumber,
-                g.Select(r => $"{r.Member} · {r.Offering} ${r.Owed:0}").ToList(),
+                g.Select(r => $"{r.Member} · {r.Offering} {Usd(r.Owed)}").ToList(),
                 g.Select(r => r.ParentSaysPaidNote).FirstOrDefault(n => n != null)))
             .OrderByDescending(i => i.Amount)
             .ToList();
     }
+    private static string Usd(decimal n) => n % 1 == 0 ? $"${n:0}" : $"${n:0.00}";
 }

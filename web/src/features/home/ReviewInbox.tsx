@@ -13,7 +13,7 @@ type ReviewQueue = { sure: ReviewItem[]; needsLook: ReviewItem[]; sureTotal: num
 type BulkItem = { receiptId: string; approved: boolean; message: string }
 type BulkResult = { approved: number; skipped: number; items: BulkItem[] }
 
-export function ReviewInbox({ onApproved }: { onApproved?: () => void }) {
+export function ReviewInbox({ version = 0, onApproved }: { version?: number; onApproved?: () => void }) {
   const [queue, setQueue] = useState<ReviewQueue | null>(null)
   const [picked, setPicked] = useState<Set<string>>(new Set())
   const [busy, setBusy] = useState(false)
@@ -26,7 +26,7 @@ export function ReviewInbox({ onApproved }: { onApproved?: () => void }) {
       .catch((e: Error) => setError(e.message))
   }, [])
 
-  useEffect(() => { load() }, [load])
+  useEffect(() => { load() }, [load,version])
 
   function toggle(id: string) {
     setPicked((prev) => {
@@ -48,7 +48,7 @@ export function ReviewInbox({ onApproved }: { onApproved?: () => void }) {
       if (!res.ok) throw new Error(data?.problem ?? `Something went wrong (${res.status})`)
       setResult(data as BulkResult)
       load()
-    if ((data as BulkResult).approved > 0) onApproved?.()
+            if ((data as BulkResult).approved > 0) onApproved?.()
     } catch (e) {
       setError((e as Error).message)
     } finally {

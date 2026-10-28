@@ -122,7 +122,15 @@ public sealed class ApprovalService(TallyDbContext db, PayPalNoteService paypalN
 
     public async Task<ApproveResult?> GetAsync(Guid receiptId, CancellationToken ct)
     {
-        var payment = await db.Payments.AsNoTracking().FirstOrDefaultAsync(p => p.ReceiptId == receiptId, ct);
+        var paymentId = await db.Payments.AsNoTracking()
+            .Where(p => p.ReceiptId == receiptId).Select(p => (Guid?)p.Id).FirstOrDefaultAsync(ct);
+        return paymentId is null ? null : await DescribePaymentAsync(paymentId.Value, ct);
+    }
+
+    // What one payment was applied to, plus its PayPal notes. Used by receipts and by hand-recorded payments.
+    public async Task<ApproveResult?> DescribePaymentAsync(Guid paymentId, CancellationToken ct)
+    {
+        var payment = await db.Payments.AsNoTracking().FirstOrDefaultAsync(p => p.Id == paymentId, ct);
         if (payment is null) return null;
 
         var lines = await (
@@ -144,6 +152,8 @@ public sealed class ApprovalService(TallyDbContext db, PayPalNoteService paypalN
         var m when m is not null && m.Contains("zelle") => PaymentSource.Zelle,
         var m when m is not null && m.Contains("upi") => PaymentSource.Upi,
         var m when m is not null && m.Contains("cash") => PaymentSource.Cash,
+        var m when m is not null && m.Contains("check") => PaymentSource.Check,
         _ => PaymentSource.Other,
+       
     };
 }

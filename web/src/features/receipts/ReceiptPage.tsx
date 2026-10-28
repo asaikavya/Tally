@@ -19,21 +19,26 @@ export function ReceiptPage() {
   const [form, setForm] = useState<Form | null>(null)
   const [editing, setEditing] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [saveError, setSaveError] = useState<string | null>(null)
 
   useEffect(() => {
     getJson<Receipt>(`/api/receipts/${id}`).then((x) => { setR(x); setForm(toForm(x)) }).catch((e: Error) => setError(e.message))
   }, [id])
-
   const save = async () => {
     if (!form) return
-    const updated = await putJson<Receipt>(`/api/receipts/${id}`, {
-      amount: form.amount ? Number(form.amount) : null,
-      paidOn: form.paidOn || null,
-      senderName: form.senderName || null,
-      memo: form.memo || null,
-      reference: form.reference || null,
-    })
-    setR(updated); setForm(toForm(updated)); setEditing(false)
+    setSaveError(null)
+    try {
+      const updated = await putJson<Receipt>(`/api/receipts/${id}`, {
+        amount: form.amount ? Number(form.amount) : null,
+        paidOn: form.paidOn || null,
+        senderName: form.senderName || null,
+        memo: form.memo || null,
+        reference: form.reference || null,
+      })
+      setR(updated); setForm(toForm(updated)); setEditing(false)
+    } catch (e) {
+      setSaveError((e as Error).message)
+    }
   }
     const [reading, setReading] = useState(false)
   const readAgain = async () => {
@@ -84,15 +89,14 @@ export function ReceiptPage() {
                className="mx-auto max-h-140 -rotate-1 rounded-md bg-white shadow-md" />
         </div>
 
-
-
         <section className="flex flex-[1_1_380px] flex-col gap-4 rounded-2xl border border-neutral-200 bg-white p-6">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-bold">What the AI read</h2>
             {!editing
               ? <Button variant="outline" onClick={() => setEditing(true)}>Fix a detail</Button>
-              : <div className="flex gap-2"><Button onClick={save}>Save</Button><Button variant="ghost" onClick={() => { setForm(toForm(r)); setEditing(false) }}>Cancel</Button></div>}
+              : <div className="flex gap-2"><Button onClick={save}>Save</Button><Button variant="ghost" onClick={() => { setForm(toForm(r)); setEditing(false); setSaveError(null) }}>Cancel</Button></div>}
           </div>
+        {saveError && <p className="rounded-lg bg-[#FBE4DF] p-3 text-sm text-[#A8321F]">{saveError}</p>}
           {field("Amount", "amount", r.amount != null ? money(r.amount) : "", "number")}
         {field("Date", "paidOn", r.paidOn ? new Date(r.paidOn + "T00:00").toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "", "date")}
           {field("Sender", "senderName", r.senderName ?? "")}

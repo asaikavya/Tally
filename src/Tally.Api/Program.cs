@@ -9,6 +9,7 @@ using Tally.Infrastructure.Webhooks;
 using Tally.Ai;
 using Tally.Infrastructure.Receipts;
 using Tally.Infrastructure.Storage;
+using Tally.Infrastructure.Payments;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -46,6 +47,7 @@ builder.Services.AddScoped<DetectiveService>();
 builder.Services.AddScoped<ApprovalService>();
 builder.Services.AddScoped<PayPalNoteService>();
 builder.Services.AddScoped<ReviewService>();
+builder.Services.AddScoped<ManualPaymentService>();
 
 var app = builder.Build();
 

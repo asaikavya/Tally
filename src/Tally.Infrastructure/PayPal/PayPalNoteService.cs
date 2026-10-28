@@ -134,6 +134,7 @@ public sealed class PayPalNoteService(TallyDbContext db, PayPalInvoiceClient pay
     {
         PaymentSource.Zelle or PaymentSource.Upi => "BANK_TRANSFER",
         PaymentSource.Cash => "CASH",
+        PaymentSource.Check => "CHECK",
         _ when method?.Contains("check", StringComparison.OrdinalIgnoreCase) == true => "CHECK",
         _ when method?.Contains("transfer", StringComparison.OrdinalIgnoreCase) == true => "BANK_TRANSFER",
         _ => "OTHER",
@@ -147,6 +148,7 @@ public sealed class PayPalNoteService(TallyDbContext db, PayPalInvoiceClient pay
             PaymentSource.Zelle => "Zelle",
             PaymentSource.Upi => "UPI",
             PaymentSource.Cash => "Cash",
+            PaymentSource.Check => "CHECK",
             _ => string.IsNullOrWhiteSpace(r?.Method) ? "Outside payment" : r!.Method!,
         };
         var from = string.IsNullOrWhiteSpace(p.SenderText) ? "" : $" from {p.SenderText}";

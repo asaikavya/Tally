@@ -15,4 +15,7 @@ export type Receipt = {
   duplicateOfId: string | null
   edited: string[]
  aiRead: boolean
+ corrections: Correction[]      // add inside the Receipt type
 }
+
+export type Correction = { field: string; aiValue: string | null; nowValue: string | null }

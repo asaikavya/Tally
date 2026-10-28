@@ -5,6 +5,7 @@ import { getJson, putJson } from "@/lib/api"
 import { money } from "@/lib/money"
 import type { Receipt } from "./types"
 import { DetectivePanel } from "./DetectivePanel"
+import { CorrectionNote } from "./CorrectionNote"
 
 type Form = { amount: string; paidOn: string; senderName: string; memo: string; reference: string }
 const toForm = (r: Receipt): Form => ({
@@ -99,13 +100,18 @@ export function ReceiptPage() {
           {field("Reference", "reference", r.reference ?? "")}
           <p className="text-sm text-neutral-500">
             {r.method ?? "Unknown method"} · paid to {r.paidTo ?? "unknown"} · uploaded by {r.uploadedBy}
+            <CorrectionNote corrections={r.corrections} />
           </p>
           <p className="text-xs text-neutral-500">
             AI read the receipt image only. It never sees your families list; matching is Tally's own code.
           </p>
         </section>
       </div>
-            <DetectivePanel key={`${r.amount}-${r.senderName}-${r.memo}`} receiptId={r.id} status={r.status} />
+               <DetectivePanel
+     key={`${r.amount}|${r.senderName}|${r.paidOn}|${r.memo}`}
+     receiptId={r.id}
+     status={r.status}
+   />
     </main>
   )
 }

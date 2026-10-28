@@ -11,4 +11,5 @@ public class PayPalNote : Entity
     public required string StatusBefore { get; set; }        // e.g. SENT
     public required string StatusAfter { get; set; }         // e.g. PARTIALLY_PAID (read back from PayPal)
     public DateTime RecordedAtUtc { get; set; }
+    public sealed record RemindRequest(string Subject, string Note, bool SendToInvoicer, bool SendToRecipient);
 }

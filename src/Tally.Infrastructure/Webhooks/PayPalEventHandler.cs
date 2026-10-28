@@ -53,7 +53,7 @@ public sealed class PayPalEventHandler(TallyDbContext db, PayPalInvoiceClient pa
             var amount = decimal.Parse(tx.Amount.Value, CultureInfo.InvariantCulture);
             var payment = new Payment
             {
-                Source = PaymentSource.PayPal,
+                Source = tx.Type == "EXTERNAL" ? PaymentSource.Other : PaymentSource.PayPal,   // marked paid outside PayPal vs paid through PayPal
                 Amount = amount,
                 Currency = tx.Amount.CurrencyCode,
                 ReceivedAtUtc = DateTime.UtcNow,

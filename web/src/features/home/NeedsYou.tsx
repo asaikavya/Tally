@@ -5,6 +5,7 @@ import { getJson } from "@/lib/api"
 import { money } from "@/lib/money"
 import { q } from "@/lib/demo"
 import type { NeedsYouItem } from "./types"
+import { ReminderPanel } from "./ReminderPanel"
 
 const METHODS = ["Zelle", "UPI", "Cash", "Check", "Other"]
 
@@ -29,6 +30,7 @@ export function NeedsYou({ version = 0, onChanged }: { version?: number; onChang
   const [items, setItems] = useState<NeedsYouItem[] | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [open, setOpen] = useState<string | null>(null)        // which family's form is open
+  const [remindFor, setRemindFor] = useState<string | null>(null)   // which family's reminder is open
   const [method, setMethod] = useState("Zelle")
   const [amount, setAmount] = useState("")
   const [busy, setBusy] = useState(false)
@@ -43,6 +45,7 @@ export function NeedsYou({ version = 0, onChanged }: { version?: number; onChang
     setOpen(item.payerId)
     setProblem(null)
     setAmount(String(item.amount))
+    setRemindFor(null)
     // "Parent says paid" → start with what the parent said (Zelle, UPI…).
     setMethod(METHODS.find((m) => item.note?.toLowerCase().includes(m.toLowerCase())) ?? "Zelle")
   }
@@ -127,7 +130,12 @@ export function NeedsYou({ version = 0, onChanged }: { version?: number; onChang
               onClick={() => (open === item.payerId ? setOpen(null) : openForm(item))}>
               {item.kind === "parent-says-paid" ? "Confirm received" : "Paid another way"}
             </Button>
-            <Button variant="outline" disabled title="Comes with reminders">Resend PayPal link</Button>
+                      {item.kind === "late"
+              ? <Button variant="outline" disabled={busy}
+                  onClick={() => { setOpen(null); setRemindFor(remindFor === item.payerId ? null : item.payerId) }}>
+                  Send reminder
+                </Button>
+              : <Button variant="outline" disabled title="The parent said they already paid">Reminders paused</Button>}
           </div>
 
           {open === item.payerId && (
@@ -151,6 +159,9 @@ export function NeedsYou({ version = 0, onChanged }: { version?: number; onChang
               <span className="w-full text-xs text-neutral-500">Fills the oldest charges first. Anything extra becomes family credit.</span>
               {problem && <span className="w-full text-sm text-red-700">{problem}</span>}
             </div>
+          )}
+          {remindFor === item.payerId && (
+            <ReminderPanel payerId={item.payerId} payerName={item.payerName} onClose={() => setRemindFor(null)} />
           )}
         </div>
       ))}

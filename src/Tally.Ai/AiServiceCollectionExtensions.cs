@@ -1,7 +1,9 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.SemanticKernel;
+using Tally.Domain.Messages;
 using Tally.Domain.Receipts;
+
 
 namespace Tally.Ai;
 
@@ -32,6 +34,7 @@ public static class AiServiceCollectionExtensions
         }
 
         services.AddScoped<IReceiptReader, ReceiptReader>();
+        services.AddScoped<IReminderWriter, ReminderWriter>();   // ← new
         return services;
     }
 }

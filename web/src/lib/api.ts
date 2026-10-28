@@ -37,3 +37,13 @@ export async function putJson<T>(path: string, body: unknown): Promise<T> {
   if (!res.ok) return fail(res)
   return (await res.json()) as T
 }
+// POST that returns JSON (and shows the server's friendly { problem } on errors).
+export async function postFor<T>(path: string, body?: unknown): Promise<T> {
+  const res = await fetch(path, {
+    method: "POST",
+    headers: body ? { "Content-Type": "application/json" } : undefined,
+    body: body ? JSON.stringify(body) : undefined,
+  })
+  if (!res.ok) return fail(res)
+  return (await res.json()) as T
+}

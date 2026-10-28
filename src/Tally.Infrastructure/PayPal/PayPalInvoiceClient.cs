@@ -1,5 +1,6 @@
 ﻿using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using static Tally.Domain.Entities.PayPalNote;
 
 namespace Tally.Infrastructure.PayPal;
 
@@ -45,7 +46,14 @@ public sealed class PayPalInvoiceClient(IHttpClientFactory httpFactory, PayPalTo
         if (response.StatusCode == System.Net.HttpStatusCode.NotFound) return;   // already gone: that's fine
         await EnsureSuccessAsync(response, ct);
     }
-
+    // PayPal emails the family a reminder with the invoice and a Pay Now button.
+    public async Task RemindAsync(string invoiceId, RemindRequest body, CancellationToken ct)
+    {
+        using var request = await AuthorizedAsync(HttpMethod.Post, $"v2/invoicing/invoices/{invoiceId}/remind", ct);
+        request.Content = JsonContent.Create(body, options: PayPalJson.Options);
+        using var response = await httpFactory.CreateClient("PayPal").SendAsync(request, ct);
+        await EnsureSuccessAsync(response, ct);
+    }
     private async Task<HttpRequestMessage> AuthorizedAsync(HttpMethod method, string path, CancellationToken ct)
     {
         var request = new HttpRequestMessage(method, path);

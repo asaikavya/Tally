@@ -1,15 +1,16 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using Tally.Ai;
 using Tally.Infrastructure.Billing;
 using Tally.Infrastructure.Data;
 using Tally.Infrastructure.Demo;
+using Tally.Infrastructure.Messages;
 using Tally.Infrastructure.Messaging;
+using Tally.Infrastructure.Payments;
 using Tally.Infrastructure.PayPal;
-using Tally.Infrastructure.Webhooks;
-using Tally.Ai;
 using Tally.Infrastructure.Receipts;
 using Tally.Infrastructure.Storage;
-using Tally.Infrastructure.Payments;
+using Tally.Infrastructure.Webhooks;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -48,6 +49,7 @@ builder.Services.AddScoped<ApprovalService>();
 builder.Services.AddScoped<PayPalNoteService>();
 builder.Services.AddScoped<ReviewService>();
 builder.Services.AddScoped<ManualPaymentService>();
+builder.Services.AddScoped<ReminderService>();
 
 var app = builder.Build();
 

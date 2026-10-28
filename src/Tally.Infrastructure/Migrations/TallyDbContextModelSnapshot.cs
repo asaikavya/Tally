@@ -550,6 +550,43 @@ namespace Tally.Infrastructure.Migrations
                     b.ToTable("Receipts");
                 });
 
+            modelBuilder.Entity("Tally.Domain.Entities.ReminderLog", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("InvoiceId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Language")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("Note")
+                        .IsRequired()
+                        .HasMaxLength(1500)
+                        .HasColumnType("nvarchar(1500)");
+
+                    b.Property<Guid>("PayerId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("SentAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Subject")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PayerId", "SentAtUtc");
+
+                    b.ToTable("ReminderLogs");
+                });
+
             modelBuilder.Entity("Tally.Domain.Entities.WebhookEvent", b =>
                 {
                     b.Property<Guid>("Id")

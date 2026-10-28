@@ -22,6 +22,7 @@ public class TallyDbContext(DbContextOptions<TallyDbContext> options) : DbContex
     public DbSet<WebhookEvent> WebhookEvents => Set<WebhookEvent>();
     public DbSet<Receipt> Receipts => Set<Receipt>();
     public DbSet<PayPalNote> PayPalNotes => Set<PayPalNote>();
+    public DbSet<ReminderLog> ReminderLogs => Set<ReminderLog>();
 
     protected override void ConfigureConventions(ModelConfigurationBuilder builder)
     {
@@ -58,6 +59,8 @@ public class TallyDbContext(DbContextOptions<TallyDbContext> options) : DbContex
         model.Entity<Receipt>().Property(r => r.AiRaw).HasColumnType("nvarchar(max)");
         model.Entity<Receipt>().Property(r => r.Currency).HasMaxLength(3);
         model.Entity<PayPalNote>().HasIndex(n => n.PaymentId);
+        model.Entity<ReminderLog>().Property(l => l.Note).HasMaxLength(1500);
+        model.Entity<ReminderLog>().HasIndex(l => new { l.PayerId, l.SentAtUtc });
 
 
         // Never cascade-delete financial history

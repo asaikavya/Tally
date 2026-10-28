@@ -104,6 +104,7 @@ public static class DemoSeeder
 
         // Families paying from abroad, not paid yet.
         var lucia = NewPayer("Lucia Lopez");
+        lucia.PreferredLanguage = "es";
         Bill(Enroll(NewMember(lucia, "Diego Lopez", "MX"), danceSun, danceMonthly), danceMonthly, Nov);
         var rohan = NewPayer("Rohan Sharma");
         Bill(Enroll(NewMember(rohan, "Rohan Sharma", "IN"), drawOnl, drawMonthly), drawMonthly, Nov);

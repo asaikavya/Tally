@@ -83,5 +83,16 @@ public sealed class ReceiptsController(ReceiptIntakeService intake, TallyDbConte
     [HttpPost("{id:guid}/paypal-note")]
     public async Task<IActionResult> RetryPayPal(Guid id, [FromServices] ApprovalService approvals, CancellationToken ct)
     => ToResult(await approvals.RetryPayPalAsync(id, ct));
+    [HttpGet("review")]
+    public Task<ReviewQueue> Review([FromServices] ReviewService review, CancellationToken ct)
+    => review.GetQueueAsync(ct);
+
+    [HttpPost("approve-all")]
+    public async Task<IActionResult> ApproveAll(BulkApproveRequest req, [FromServices] ReviewService review, CancellationToken ct)
+    {
+        if (req.ReceiptIds is not { Count: > 0 }) return BadRequest(new { problem = "Pick at least one receipt." });
+        if (req.ReceiptIds.Count > 50) return BadRequest(new { problem = "Up to 50 at a time." });
+        return Ok(await review.ApproveSureAsync(req.ReceiptIds, ct));
+    }
 
 }

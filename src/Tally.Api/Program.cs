@@ -45,6 +45,7 @@ builder.Services.AddScoped<ReceiptIntakeService>();
 builder.Services.AddScoped<DetectiveService>();
 builder.Services.AddScoped<ApprovalService>();
 builder.Services.AddScoped<PayPalNoteService>();
+builder.Services.AddScoped<ReviewService>();
 
 var app = builder.Build();
 

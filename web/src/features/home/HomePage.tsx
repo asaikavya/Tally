@@ -7,27 +7,32 @@ import { q } from "@/lib/demo"
 import { NeedsYou } from "./NeedsYou"
 import { UploadReceiptButton } from "@/features/receipts/UploadReceiptButton"
 import { SampleReceipts } from "./SampleReceipts"
+import { ReviewInbox } from "./ReviewInbox"
+
 export function HomePage() {
   const [data, setData] = useState<HomeSummary | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [version, setVersion] = useState(0)        // goes up after every approval
 
   useEffect(() => {
     getJson<HomeSummary>(`/api/home?${q}`)
       .then(setData)
       .catch((e: Error) => setError(e.message))
-  }, [])
+  }, [version])
 
   if (error) return <p className="p-8 text-red-700">Couldn't load Home: {error}</p>
   if (!data) return <p className="p-8 text-neutral-500">Loading…</p>
 
   return (
     <main className="mx-auto flex max-w-5xl flex-col gap-6 p-8">
-      <div>
-        <p className="text-sm text-neutral-500">November</p>
-        <h1 className="text-3xl font-extrabold tracking-tight">
-          Every payment, <span className="text-[#1F5F8B]">accounted for.</span>
-           <UploadReceiptButton />
-        </h1>
+            <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <p className="text-sm text-neutral-500">November</p>
+          <h1 className="text-3xl font-extrabold tracking-tight">
+            Every payment, <span className="text-[#1F5F8B]">accounted for.</span>
+          </h1>
+        </div>
+        <UploadReceiptButton />
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3">
@@ -54,7 +59,8 @@ export function HomePage() {
         </Card>
       </div>
       <SampleReceipts />
-      <NeedsYou />
+      <ReviewInbox onApproved={() => setVersion((v) => v + 1)}/>
+      <NeedsYou key={version} />
     </main>
   )
 }

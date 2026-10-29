@@ -1,12 +1,11 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
+﻿using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Tally.Infrastructure.Messaging;
 
 namespace Tally.Infrastructure.Webhooks;
 
-// Runs for the lifetime of the app, processing queued events one at a time
-public sealed class WebhookProcessor(IWebhookQueue queue, IServiceScopeFactory scopes, ILogger<WebhookProcessor> log)
+// In-memory version: one event at a time; a failure is logged and the loop carries on.
+public sealed class WebhookProcessor(InMemoryWebhookQueue queue, WebhookEventRunner runner, ILogger<WebhookProcessor> log)
     : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -15,13 +14,11 @@ public sealed class WebhookProcessor(IWebhookQueue queue, IServiceScopeFactory s
         {
             try
             {
-                using var scope = scopes.CreateScope();                       // fresh DbContext per event
-                var handler = scope.ServiceProvider.GetRequiredService<PayPalEventHandler>();
-                await handler.HandleAsync(id, stoppingToken);
+                await runner.RunAsync(id, stoppingToken);
             }
-            catch (Exception ex)
+            catch (Exception ex) when (ex is not OperationCanceledException)
             {
-                log.LogError(ex, "Failed to process webhook event {Id}", id); // one bad event never stops the loop
+                log.LogError(ex, "Failed to process webhook event {Id}", id);   // one bad event never stops the loop
             }
         }
     }

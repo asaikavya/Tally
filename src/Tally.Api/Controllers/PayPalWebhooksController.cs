@@ -28,7 +28,22 @@ public class PayPalWebhooksController(
         {
             var headers = new WebhookHeaders(H("PAYPAL-AUTH-ALGO"), H("PAYPAL-CERT-URL"),
                 H("PAYPAL-TRANSMISSION-ID"), H("PAYPAL-TRANSMISSION-SIG"), H("PAYPAL-TRANSMISSION-TIME"));
-            if (!await paypal.VerifyWebhookAsync(headers, body, options.Value.WebhookId, ct))
+
+            // Missing headers = not from PayPal. Don't even ask PayPal.
+            if (string.IsNullOrEmpty(headers.TransmissionId) || string.IsNullOrEmpty(headers.TransmissionSig))
+            {
+                log.LogWarning("Rejected a webhook without PayPal signature headers");
+                return BadRequest();
+            }
+
+            bool valid;
+            try { valid = await paypal.VerifyWebhookAsync(headers, body, options.Value.WebhookId, ct); }
+            catch (HttpRequestException ex)
+            {
+                log.LogWarning(ex, "PayPal couldn't verify a webhook signature");
+                return BadRequest();
+            }
+            if (!valid)
             {
                 log.LogWarning("Rejected a PayPal webhook with an invalid signature");
                 return BadRequest();
@@ -36,14 +51,28 @@ public class PayPalWebhooksController(
         }
 
         // 2. Never answer the same ring twice
-        using var doc = JsonDocument.Parse(body);
-        var eventId = doc.RootElement.GetProperty("id").GetString()!;
+        // Not JSON, or not shaped like a PayPal event → 400, never a crash.
+        JsonDocument doc;
+        try { doc = JsonDocument.Parse(body); }
+        catch (JsonException)
+        {
+            log.LogWarning("Rejected a webhook that isn't JSON");
+            return BadRequest();
+        }
+        using var _ = doc;
+
+        if (!doc.RootElement.TryGetProperty("id", out var idProp) || idProp.GetString() is not { Length: > 0 } eventId
+            || !doc.RootElement.TryGetProperty("event_type", out var typeProp) || typeProp.GetString() is not { Length: > 0 } eventType)
+        {
+            log.LogWarning("Rejected a webhook without an id or event_type");
+            return BadRequest();
+        }
         if (await db.WebhookEvents.AnyAsync(e => e.PayPalEventId == eventId, ct)) return Ok();
 
         var evt = new WebhookEvent
         {
             PayPalEventId = eventId,
-            EventType = doc.RootElement.GetProperty("event_type").GetString()!,
+            EventType = eventType,
             Payload = body,
             ReceivedAtUtc = DateTime.UtcNow
         };

@@ -36,9 +36,8 @@ builder.Services.AddHttpClient("PayPal", (sp, client) =>
 builder.Services.AddSingleton<PayPalTokenProvider>();
 builder.Services.AddScoped<PayPalInvoiceClient>();
 builder.Services.AddScoped<InvoicingService>();
-builder.Services.AddSingleton<IWebhookQueue, InMemoryWebhookQueue>();
+builder.Services.AddWebhookQueue(builder.Configuration, out var webhookQueueMode);
 builder.Services.AddScoped<PayPalEventHandler>();
-builder.Services.AddHostedService<WebhookProcessor>();
 builder.Services.AddOptions<DemoOptions>().Bind(builder.Configuration.GetSection(DemoOptions.Section));
 builder.Services.AddScoped<DemoResetService>();
 builder.Services.AddTallyAi(builder.Configuration);
@@ -52,6 +51,8 @@ builder.Services.AddScoped<ManualPaymentService>();
 builder.Services.AddScoped<ReminderService>();
 
 var app = builder.Build();
+
+app.Logger.LogInformation("Webhook queue: {Mode}", webhookQueueMode);
 
 // 2. Use services (all AFTER builder.Build())
 if (app.Environment.IsDevelopment())

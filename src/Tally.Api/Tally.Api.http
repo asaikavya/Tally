@@ -73,3 +73,9 @@ POST https://localhost:7218/api/receipts/01a17c3f-53f6-7956-8dd5-825091eb6bd7/un
 
 ###
    POST https://localhost:7218/api/demo/sync
+
+###
+POST https://localhost:7218/api/webhooks/paypal
+Content-Type: application/json
+
+{ "id": "WH-TEST-005", "event_type": "INVOICING.INVOICE.PAID", "resource": { "invoice": { "id": "INV2-6P8R-QQJ7-7MPY-W2QW" } } }

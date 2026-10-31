@@ -8,12 +8,14 @@ import { NeedsYou } from "./NeedsYou"
 import { UploadReceiptButton } from "@/features/receipts/UploadReceiptButton"
 import { SampleReceipts } from "./SampleReceipts"
 import { ReviewInbox } from "./ReviewInbox"
+import { useAutoRefresh } from "@/lib/useAutoRefresh"
 
 export function HomePage() {
   const [data, setData] = useState<HomeSummary | null>(null)
   const [error, setError] = useState<string | null>(null)
    const [version, setVersion] = useState(0)        // goes up after every approval
   const bump = () => setVersion((v) => v + 1)
+    useAutoRefresh(bump)        // cards, receipts and Needs you re-check every 20s (and when you come back to the tab)
 
   useEffect(() => {
     getJson<HomeSummary>(`/api/home?${q}`)

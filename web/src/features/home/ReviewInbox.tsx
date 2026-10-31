@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useState,useRef } from "react"
 import { Link } from "react-router"
 import { Button } from "@/components/ui/button"
 import { getJson } from "@/lib/api"
 import { money } from "@/lib/money"
+
 
 type Cover = { label: string; amount: number }
 type ReviewItem = {
@@ -19,10 +20,22 @@ export function ReviewInbox({ version = 0, onApproved }: { version?: number; onA
   const [busy, setBusy] = useState(false)
   const [result, setResult] = useState<BulkResult | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const seen = useRef(new Set<string>())      // receipts we've already shown (keep the owner's ticks/unticks)
 
   const load = useCallback(() => {
     getJson<ReviewQueue>("/api/receipts/review")
-      .then((q) => { setQueue(q); setPicked(new Set(q.sure.map((i) => i.receiptId))) })   // all sure ones pre-ticked
+      .then((q) => {
+        setQueue(q)
+        // Work out what's new BEFORE updating state (state updaters must not change anything else).
+        const fresh = q.sure.map((i) => i.receiptId).filter((id) => !seen.current.has(id))
+        fresh.forEach((id) => seen.current.add(id))
+        const stillThere = new Set(q.sure.map((i) => i.receiptId))
+        setPicked((prev) => {
+          const next = new Set([...prev].filter((id) => stillThere.has(id)))   // keep the owner's choices
+          fresh.forEach((id) => next.add(id))                                 // new sure matches arrive ticked
+          return next
+        })
+      })
       .catch((e: Error) => setError(e.message))
   }, [])
 

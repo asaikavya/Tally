@@ -24,6 +24,8 @@ public class TallyDbContext(DbContextOptions<TallyDbContext> options) : DbContex
     public DbSet<PayPalNote> PayPalNotes => Set<PayPalNote>();
     public DbSet<ReminderLog> ReminderLogs => Set<ReminderLog>();
 
+    public DbSet<ReceiptImage> ReceiptImages => Set<ReceiptImage>();
+
     protected override void ConfigureConventions(ModelConfigurationBuilder builder)
     {
         builder.Properties<decimal>().HavePrecision(18, 2);    // all money, one rule
@@ -61,6 +63,9 @@ public class TallyDbContext(DbContextOptions<TallyDbContext> options) : DbContex
         model.Entity<PayPalNote>().HasIndex(n => n.PaymentId);
         model.Entity<ReminderLog>().Property(l => l.Note).HasMaxLength(1500);
         model.Entity<ReminderLog>().HasIndex(l => new { l.PayerId, l.SentAtUtc });
+        model.Entity<ReceiptImage>().HasIndex(i => i.Key).IsUnique();
+        model.Entity<ReceiptImage>().Property(i => i.Key).HasMaxLength(64);
+        model.Entity<ReceiptImage>().Property(i => i.ContentType).HasMaxLength(50);
 
 
         // Never cascade-delete financial history

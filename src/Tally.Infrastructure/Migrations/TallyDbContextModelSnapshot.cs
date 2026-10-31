@@ -550,6 +550,34 @@ namespace Tally.Infrastructure.Migrations
                     b.ToTable("Receipts");
                 });
 
+            modelBuilder.Entity("Tally.Domain.Entities.ReceiptImage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<byte[]>("Bytes")
+                        .IsRequired()
+                        .HasColumnType("varbinary(max)");
+
+                    b.Property<string>("ContentType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("Key")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Key")
+                        .IsUnique();
+
+                    b.ToTable("ReceiptImages");
+                });
+
             modelBuilder.Entity("Tally.Domain.Entities.ReminderLog", b =>
                 {
                     b.Property<Guid>("Id")

@@ -41,7 +41,7 @@ builder.Services.AddScoped<PayPalEventHandler>();
 builder.Services.AddOptions<DemoOptions>().Bind(builder.Configuration.GetSection(DemoOptions.Section));
 builder.Services.AddScoped<DemoResetService>();
 builder.Services.AddTallyAi(builder.Configuration);
-builder.Services.AddSingleton<IReceiptStore, LocalReceiptStore>();
+builder.Services.AddScoped<IReceiptStore, DbReceiptStore>();
 builder.Services.AddScoped<ReceiptIntakeService>();
 builder.Services.AddScoped<DetectiveService>();
 builder.Services.AddScoped<ApprovalService>();
@@ -50,22 +50,34 @@ builder.Services.AddScoped<ReviewService>();
 builder.Services.AddScoped<ManualPaymentService>();
 builder.Services.AddScoped<ReminderService>();
 
-var app = builder.Build();
+builder.Services.AddDbContext<TallyDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("TallyDb"),
+        sql => sql.EnableRetryOnFailure()));
 
+var app = builder.Build();
 app.Logger.LogInformation("Webhook queue: {Mode}", webhookQueueMode);
 
-// 2. Use services (all AFTER builder.Build())
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
-
-    using var scope = app.Services.CreateScope();
-    var db = scope.ServiceProvider.GetRequiredService<TallyDbContext>();
-    var demo = scope.ServiceProvider.GetRequiredService<IOptions<DemoOptions>>().Value;
-    await DemoSeeder.SeedIfEmptyAsync(db, demo.PayerEmail);
+    app.UseHttpsRedirection();               // in the cloud, Render handles HTTPS in front of the app
 }
 
-app.UseHttpsRedirection();
+// Seed the sample academy wherever demo mode is on (local AND live site), only if the database is empty.
+var demoSettings = app.Services.GetRequiredService<IOptions<DemoOptions>>().Value;
+if (demoSettings.Enabled)
+{
+    using var scope = app.Services.CreateScope();
+    var db = scope.ServiceProvider.GetRequiredService<TallyDbContext>();
+    await DemoSeeder.SeedIfEmptyAsync(db, demoSettings.PayerEmail);
+}
+
+app.UseDefaultFiles();                       // serves the React app's index.html
+app.UseStaticFiles();                        // ...and its JS/CSS from wwwroot
 app.UseAuthorization();
+
+app.MapGet("/health", () => Results.Ok("ok"));   // for uptime checks: never touches the database
 app.MapControllers();
+app.MapFallbackToFile("index.html");         // React routes like /pay/... and /receipts/... load the app
+
 app.Run();

@@ -24,11 +24,15 @@ public sealed class DemoResetService(
         var warnings = new List<string>();
 
         // 1) Wipe, children first (all foreign keys are Restrict), in one transaction.
-        await using (var tx = await db.Database.BeginTransactionAsync(ct))
+        // 1) Wipe, children first (all foreign keys are Restrict), in one transaction.
+        //    Wrapped in EF's retry strategy: if the cloud database drops the connection, the whole wipe is retried as one unit.
+        var strategy = db.Database.CreateExecutionStrategy();
+        await strategy.ExecuteAsync(async () =>
         {
+            await using var tx = await db.Database.BeginTransactionAsync(ct);
             await db.Allocations.ExecuteDeleteAsync(ct);
-            await db.PayPalNotes.ExecuteDeleteAsync(CancellationToken.None);
-            await db.ReminderLogs.ExecuteDeleteAsync(CancellationToken.None);
+            await db.PayPalNotes.ExecuteDeleteAsync(ct);
+            await db.ReminderLogs.ExecuteDeleteAsync(ct);
             await db.Payments.ExecuteDeleteAsync(ct);
             await db.Charges.ExecuteDeleteAsync(ct);
             await db.Invoices.ExecuteDeleteAsync(ct);
@@ -43,9 +47,9 @@ public sealed class DemoResetService(
             await db.Organizers.ExecuteDeleteAsync(ct);
             await db.WebhookEvents.ExecuteDeleteAsync(ct);
             await db.Receipts.ExecuteDeleteAsync(ct);
+            await db.ReceiptImages.ExecuteDeleteAsync(ct);
             await tx.CommitAsync(ct);
-            
-        }
+        });
         db.ChangeTracker.Clear();
 
         // 2) Seed the story.

@@ -40,9 +40,12 @@ export const STEPS: Step[] = [
   },
   {
     key: "parent",
-    say: (p) => p.parentSaidPaid
-      ? "Ravi says he paid his $100 balance. Confirm it under \"Needs you\"."
-      : "Be the parent: on Ravi's page, tap \"I already paid\" for his $100 balance.",
+    say: (p) => {
+      const balance = p.notedOnPayPal ? " his $100 balance" : " his bill"
+      return p.parentSaidPaid
+        ? `Ravi says he paid${balance}. Confirm it under "Needs you".`
+        : `Be the parent: on Ravi's page, tap "I already paid" for${balance}.`
+    },
     doneText: "Ravi's $100 is confirmed and noted on PayPal.",
     done: (p) => p.parentConfirmed,
     action: (p) => p.parentSaidPaid ? null : { kind: "parent-page", label: "Open Ravi's page ↗" },

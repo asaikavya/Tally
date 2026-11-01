@@ -4,6 +4,7 @@ import { StoryBar } from "@/features/demo/StoryBar"
 import { WelcomeCard } from "@/features/demo/WelcomeCard"
 import { useShowMe } from "@/features/demo/useShowMe"
 import { STEPS } from "@/features/demo/story"
+import { SidebarSamples } from "@/features/home/SidebarSamples"
 
 type ResetInfo = { families: number; payPalBillsSent: number; warnings: string[] }
 
@@ -72,6 +73,7 @@ export function AppShell() {
         <nav className="flex flex-col gap-0.5">
           <NavLink to="/" end className={link}>Home</NavLink>
           <NavLink to="/payments" className={link}>Payments</NavLink>
+          <SidebarSamples />
         </nav>
         <div className="mt-auto rounded-xl border border-[#CFE0EC] bg-[#F2F7FB] p-3">
           <div className="text-sm font-bold text-[#16476A]">✓ Connected to PayPal</div>

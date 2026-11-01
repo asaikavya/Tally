@@ -9,6 +9,7 @@ import { UploadReceiptButton } from "@/features/receipts/UploadReceiptButton"
 import { SampleReceipts } from "./SampleReceipts"
 import { ReviewInbox } from "./ReviewInbox"
 import { useAutoRefresh } from "@/lib/useAutoRefresh"
+import { HowItWorks } from "./HowItWorks"
 
 export function HomePage() {
   const [data, setData] = useState<HomeSummary | null>(null)
@@ -35,6 +36,7 @@ export function HomePage() {
             Every payment, <span className="text-[#1F5F8B]">accounted for.</span>
           </h1>
         </div>
+        <HowItWorks />
         <UploadReceiptButton />
       </div>
 

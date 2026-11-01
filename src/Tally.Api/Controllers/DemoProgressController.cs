@@ -1,0 +1,58 @@
+﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+using Tally.Domain.Entities;
+using Tally.Infrastructure.Data;
+using Tally.Infrastructure.Demo;
+
+namespace Tally.Api.Controllers;
+
+public sealed record DemoProgressDto(
+    bool ZelleRead,         // 1. a receipt was uploaded and read
+    bool NotedOnPayPal,     // 2. an approved receipt was noted on a PayPal bill
+    bool ParentSaidPaid,    // 3a. Ravi tapped "I already paid"
+    bool ParentConfirmed,   // 3b. owner confirmed Ravi's payment
+    bool ReminderSent,      // 4. a reminder went to Lucia
+    bool PaidWithPayPal,    // 5. Lucia paid her PayPal bill (arrived by webhook)
+    Guid? RaviPayerId,
+    Guid? LuciaPayerId);
+
+// The demo guide asks "which steps are done?" The answer comes from real data, never a saved checklist.
+[ApiController]
+[Route("api/demo")]
+public sealed class DemoProgressController(TallyDbContext db, IOptions<DemoOptions> demo) : ControllerBase
+{
+    [HttpGet("progress")]
+    public async Task<ActionResult<DemoProgressDto>> Progress(CancellationToken ct)
+    {
+         if (!demo.Value.Enabled) return NotFound();   // ← turn on once the demo settings are injected
+
+        var people = await db.Payers.AsNoTracking()
+            .Where(p => p.Name.StartsWith("Ravi") || p.Name.StartsWith("Lucia"))
+            .Select(p => new { p.Id, p.Name })
+            .ToListAsync(ct);
+        var ravi = people.FirstOrDefault(p => p.Name.StartsWith("Ravi"))?.Id;
+        var lucia = people.FirstOrDefault(p => p.Name.StartsWith("Lucia"))?.Id;
+
+        var zelleRead = await db.Receipts.AnyAsync(ct);
+
+        var notedOnPayPal = await db.PayPalNotes.AnyAsync(n =>
+            db.Payments.Any(p => p.Id == n.PaymentId && p.ReceiptId != null), ct);
+
+        var parentSaidPaid = ravi != null && await db.Charges.AnyAsync(c =>
+            c.Enrollment!.Member!.PayerId == ravi && c.ParentSaysPaidAtUtc != null, ct);
+
+        var parentConfirmed = ravi != null && await db.Payments.AnyAsync(p =>
+            p.PayerId == ravi && p.ReceiptId == null && p.Source != PaymentSource.PayPal, ct);
+
+        var reminderSent = lucia != null && await db.ReminderLogs.AnyAsync(l => l.PayerId == lucia, ct);
+
+        // A PayPal payment applied to one of Lucia's bills: only the webhook creates that.
+        var paidWithPayPal = lucia != null && await db.Allocations.AnyAsync(a =>
+            db.Payments.Any(p => p.Id == a.PaymentId && p.Source == PaymentSource.PayPal) &&
+            db.Charges.Any(c => c.Id == a.ChargeId && c.Enrollment!.Member!.PayerId == lucia), ct);
+
+        return new DemoProgressDto(zelleRead, notedOnPayPal, parentSaidPaid, parentConfirmed,
+                                   reminderSent, paidWithPayPal, ravi, lucia);
+    }
+}

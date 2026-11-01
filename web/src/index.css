@@ -127,4 +127,10 @@
   html {
     @apply font-sans;
     }
+    /* "Show me": briefly outline the part of the page a story step is about */
+.tour-highlight {
+  outline: 3px solid #E0A526;
+  outline-offset: 6px;
+  border-radius: 16px;
+}
 }

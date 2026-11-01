@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react"
+import {useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { AgGridReact } from "ag-grid-react"
 import type { ColDef, ExcelStyle } from "ag-grid-community"
 import { Button } from "@/components/ui/button"
@@ -11,6 +11,7 @@ import { ActionCell } from "./ActionCell"
 import { familyStatus, distinctJoin } from "./familyAgg"
 import { tallyGridTheme } from "./gridTheme"
 import type { PaymentRow } from "./types"
+import { useAutoRefresh } from "@/lib/useAutoRefresh"
 
 const filters = ["All", "Paid", "Partial", "Says paid", "Late", "Due"] as const
 type Filter = (typeof filters)[number]
@@ -28,9 +29,11 @@ export function PaymentsPage() {
   const [search, setSearch] = useState("")
   const [filter, setFilter] = useState<Filter>("All")
 
-  useEffect(() => {
+  const load = useCallback(() => {
     getJson<PaymentRow[]>(`/api/payments?${q}`).then(setRows).catch((e: Error) => setError(e.message))
   }, [])
+  useEffect(() => { load() }, [load])
+  useAutoRefresh(load)      // a PayPal payment shows up by itself; open groups and filters stay as they are
 
   const columns = useMemo<ColDef<PaymentRow>[]>(() => [
     { field: "family", rowGroup: true, hide: true },
@@ -65,7 +68,7 @@ export function PaymentsPage() {
       <div className="flex flex-wrap items-end justify-between gap-3">
       <div>
           <h1 className="text-3xl font-extrabold tracking-tight">November payments</h1>
-          <p className="text-sm text-neutral-500">Bills were due Nov 10</p>
+                  <p className="text-sm text-neutral-500">Every family's November bill: paid through PayPal, outside PayPal, or still due. Bills were due Nov 10.</p>
         </div>
         <Button variant="outline" onClick={exportExcel}>Export to Excel</Button>
       </div>

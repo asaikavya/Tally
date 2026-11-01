@@ -1,5 +1,9 @@
 import { NavLink, Outlet } from "react-router"
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
+import { StoryBar } from "@/features/demo/StoryBar"
+import { WelcomeCard } from "@/features/demo/WelcomeCard"
+import { useShowMe } from "@/features/demo/useShowMe"
+import { STEPS } from "@/features/demo/story"
 
 type ResetInfo = { families: number; payPalBillsSent: number; warnings: string[] }
 
@@ -9,33 +13,49 @@ const link = ({ isActive }: { isActive: boolean }) =>
   }`
 
 export function AppShell() {
-  // --- state (like fields on the page) ---
   const [resetting, setResetting] = useState(false)
-  const [resetInfo, setResetInfo] = useState<ResetInfo | null>(null)
+  const [toast, setToast] = useState<string | null>(null)
+  const [welcome, setWelcome] = useState(false)
+  const showMe = useShowMe()
 
-  // --- runs once when the page loads: show the "Demo reset" message if a reset just happened ---
+  // On load: a short "Demo reset" message if a reset just happened, and the welcome card on a first visit.
   useEffect(() => {
     try {
       const saved = sessionStorage.getItem("tally-reset")
       if (saved) {
-        setResetInfo(JSON.parse(saved))
         sessionStorage.removeItem("tally-reset")
+        const r = JSON.parse(saved) as ResetInfo
+        setToast(`Demo reset · ${r.families} families, ${r.payPalBillsSent} fresh PayPal bills. Start with step 1 above.`
+          + (r.warnings.length > 0 ? ` Note: ${r.warnings.join(" · ")}` : ""))
       }
-    } catch { /* storage blocked: no message */ }
+      if (!localStorage.getItem("tally-welcome-seen")) setWelcome(true)
+    } catch { /* storage blocked: skip both */ }
   }, [])
 
-  // --- the Reset button's action ---
+  // The toast disappears on its own after 6 seconds.
+  useEffect(() => {
+    if (!toast) return
+    const t = window.setTimeout(() => setToast(null), 6000)
+    return () => window.clearTimeout(t)
+  }, [toast])
+
+  const closeWelcome = useCallback((startStory: boolean) => {
+    setWelcome(false)
+    try { localStorage.setItem("tally-welcome-seen", "1") } catch { /* fine */ }
+    if (startStory) showMe(STEPS[0].tour)
+  }, [showMe])
+
   const resetDemo = async () => {
     setResetting(true)
     try {
       const res = await fetch("/api/demo/reset", { method: "POST" })
       if (!res.ok) throw new Error(String(res.status))
       const result = await res.json()
-      try { sessionStorage.setItem("tally-reset", JSON.stringify(result)) } catch { /* storage blocked: skip the message */ }
-            window.location.assign("/")   // the page you were on may not exist after a reset
+      try { sessionStorage.setItem("tally-reset", JSON.stringify(result)) } catch { /* skip the message */ }
+      window.location.assign("/")   // the page you were on may not exist after a reset
     } catch {
       setResetting(false)
-      alert("Reset failed. Check that the API is running.")
+      setToast("Reset didn't work. Try again in a moment.")
     }
   }
 
@@ -62,37 +82,33 @@ export function AppShell() {
       </aside>
 
       <div className="min-w-0 flex-1">
-        {/* Demo bar */}
+        {/* ONE bar: the story step + what is this + reset */}
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#F0D9A0] bg-[#FFF6DF] px-6 py-2.5 text-sm text-[#5C4300]">
-          <span>
-            <strong>Demo mode</strong> · sample academy, PayPal sandbox. Try anything, then reset.
-          </span>
-          <button
-            title="Reloads the sample academy and sends fresh PayPal sandbox bills. Takes about 10 seconds."
-            onClick={resetDemo}
-            disabled={resetting}
-            className="min-h-10 rounded-lg bg-[#7A4F00] px-4 font-semibold text-white hover:bg-[#5C3B00] disabled:opacity-60"
-          >
-            {resetting ? "Resetting… (talking to PayPal)" : "↺ Reset demo"}
-          </button>
-        </div>
-
-        {/* "Demo reset" message, shown once after a reset */}
-        {resetInfo && (
-          <div role="status" className="flex flex-wrap items-start justify-between gap-3 border-b border-[#BFE3CB] bg-[#EEF8F1] px-6 py-3 text-sm text-[#1E4D2E]">
-            <div>
-              <strong>Demo reset.</strong> {resetInfo.families} families loaded, {resetInfo.payPalBillsSent} fresh PayPal sandbox bills sent.
-              <span className="mt-0.5 block">Try: open Payments to see each family's PayPal bill, or open a family's pay link and tap “I already paid”.</span>
-              {resetInfo.warnings.length > 0 && (
-                <span className="mt-1 block text-[#7A4F00]">Note: {resetInfo.warnings.join(" · ")}</span>
-              )}
-            </div>
-            <button onClick={() => setResetInfo(null)} className="min-h-9 rounded-md px-3 font-semibold hover:bg-[#DDF0E3]" aria-label="Dismiss">✕</button>
+          <StoryBar onShowMe={showMe} />
+          <div className="flex items-center gap-2">
+            <button onClick={() => setWelcome(true)} className="min-h-10 rounded-lg px-3 font-semibold hover:bg-[#F7E7BD]">
+              What is this?
+            </button>
+            <button
+              title="Reloads the sample academy and sends fresh PayPal sandbox bills. Takes about 10 seconds."
+              onClick={resetDemo}
+              disabled={resetting}
+              className="min-h-10 rounded-lg bg-[#7A4F00] px-4 font-semibold text-white hover:bg-[#5C3B00] disabled:opacity-60"
+            >
+              {resetting ? "Resetting…" : "↺ Reset"}
+            </button>
           </div>
-        )}
+        </div>
 
         <Outlet />
       </div>
+
+      {toast && (
+        <div role="status" className="fixed right-4 bottom-4 z-40 max-w-sm rounded-xl bg-[#1E4D2E] px-4 py-3 text-sm text-white shadow-lg">
+          {toast}
+        </div>
+      )}
+      {welcome && <WelcomeCard onClose={closeWelcome} />}
     </div>
   )
 }

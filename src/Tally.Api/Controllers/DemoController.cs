@@ -2,8 +2,12 @@
 using Microsoft.Extensions.Options;
 using Tally.Infrastructure.Demo;
 using Tally.Infrastructure.Webhooks;
+using Microsoft.EntityFrameworkCore;
+using Tally.Domain.Entities;
+using Tally.Infrastructure.Data;
 
 namespace Tally.Api.Controllers;
+
 
 [ApiController]
 [Route("api/demo")]
@@ -30,4 +34,7 @@ public sealed class DemoController(DemoResetService reset, IOptions<DemoOptions>
     [HttpPost("sync")]       // ← new one goes here, inside the class
     public async Task<IActionResult> Sync([FromServices] PayPalEventHandler handler, CancellationToken ct)
        => Ok(new { checkedInvoices = await handler.SyncOpenInvoicesAsync(ct) });
+    // GET api/demo/progress: which story steps are done since the last reset. Read from real data, so steps
+    // tick however the visitor did them (any page, any tab).
+
 }

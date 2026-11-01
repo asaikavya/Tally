@@ -9,4 +9,6 @@ public sealed record NeedsYouItemDto(
     decimal Amount,
     int DaysLate,
     IReadOnlyList<string> Lines,
-    string? Note);   // e.g. "Diego · Dance $90"
+    string? Note,
+    string? PayPalInvoiceId,     // the family's real PayPal bill for this month
+    string? PayPalStatus);       // PayPal's own status: SENT, PARTIALLY_PAID, PAID…);   // e.g. "Diego · Dance $90"

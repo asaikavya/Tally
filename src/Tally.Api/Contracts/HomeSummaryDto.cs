@@ -8,4 +8,5 @@ public sealed record HomeSummaryDto(
     decimal RecordedOutsidePayPal,
     decimal StillDue,
     decimal Late,
-    int LateCharges);
+    int LateCharges,
+    int PayPalBills);   // families billed on PayPal this month (bills Tally created));

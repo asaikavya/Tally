@@ -34,7 +34,7 @@ public sealed class HomeController(TallyDbContext db) : ControllerBase
             .ToListAsync(ct);
 
         var late = charges.Where(c => c.DueDate < today && c.AmountDue > c.AmountPaid && c.ParentSaysPaidAtUtc == null).ToList();
-
+        var payPalBills = await db.Invoices.CountAsync(i => i.PeriodStart == period && i.PayPalInvoiceId != null, ct);
         return new HomeSummaryDto(
             period,
             charges.Sum(c => c.AmountDue),
@@ -42,7 +42,8 @@ public sealed class HomeController(TallyDbContext db) : ControllerBase
             bySource.Where(x => !x.ViaPayPal).Sum(x => x.Total),
             charges.Sum(c => c.AmountDue - c.AmountPaid),
             late.Sum(c => c.AmountDue - c.AmountPaid),
-            late.Count);
+            late.Count,
+            payPalBills);
     }
 
     // GET api/home/needs-you?period=2026-11-01&asOf=2026-11-12  → the cards
@@ -69,6 +70,12 @@ public sealed class HomeController(TallyDbContext db) : ControllerBase
                 c.ParentSaysPaidNote
             })
             .ToListAsync(ct);
+        // Each family's PayPal bill for this month (one per family), so the row can show PayPal's own status.
+        var bills = (await db.Invoices.AsNoTracking()
+                .Where(i => i.PeriodStart == period && i.PayPalInvoiceId != null)
+                .Select(i => new { i.PayerId, i.PayPalInvoiceId, i.PayPalStatus })
+                .ToListAsync(ct))
+            .ToDictionary(i => i.PayerId);
 
         return rows
             .GroupBy(r => new { r.PayerId, r.PayerName, r.Country })
@@ -80,7 +87,9 @@ public sealed class HomeController(TallyDbContext db) : ControllerBase
                 g.Sum(r => r.Owed),
                 today.DayNumber - g.Min(r => r.DueDate).DayNumber,
                 g.Select(r => $"{r.Member} · {r.Offering} {Usd(r.Owed)}").ToList(),
-                g.Select(r => r.ParentSaysPaidNote).FirstOrDefault(n => n != null)))
+                g.Select(r => r.ParentSaysPaidNote).FirstOrDefault(n => n != null),
+                bills.GetValueOrDefault(g.Key.PayerId)?.PayPalInvoiceId,
+                bills.GetValueOrDefault(g.Key.PayerId)?.PayPalStatus))
             .OrderByDescending(i => i.Amount)
             .ToList();
     }

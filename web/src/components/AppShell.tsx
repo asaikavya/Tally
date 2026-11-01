@@ -2,6 +2,7 @@ import { NavLink, Outlet } from "react-router"
 import { useEffect, useState } from "react"
 import { SidebarSamples } from "@/features/home/SidebarSamples"
 import { GuideCard } from "@/features/demo/GuideCard"
+import { ParentViewButton } from "@/features/demo/ParentViewButton"
 
 type ResetInfo = { families: number; payPalBillsSent: number; warnings: string[] }
 
@@ -13,6 +14,7 @@ const link = ({ isActive }: { isActive: boolean }) =>
 export function AppShell() {
   const [resetting, setResetting] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
+  const [ready, setReady] = useState(false)   // true once we know the demo isn't being reset under us
 
   // After a reset, show one short message.
   useEffect(() => {
@@ -35,15 +37,20 @@ export function AppShell() {
   }, [toast])
 
     // Opening the app: if the shared demo was used and then left alone, the server starts it fresh.
+  // Opening the app: if the shared demo was used and then left alone, the server starts it fresh FIRST,
+  // so nobody sees a half-empty demo.
   useEffect(() => {
     fetch("/api/demo/fresh-if-idle", { method: "POST" })
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => {
-        if (!d?.reset) return
-        try { sessionStorage.setItem("tally-reset", JSON.stringify(d.result)) } catch { /* skip the message */ }
-        window.location.assign("/")
+        if (d?.reset) {
+          try { sessionStorage.setItem("tally-reset", JSON.stringify(d.result)) } catch { /* skip the message */ }
+          window.location.assign("/")
+          return
+        }
+        setReady(true)
       })
-      .catch(() => { /* not important: the demo still works */ })
+      .catch(() => setReady(true))            // never block the app because of this check
   }, [])
 
   const resetDemo = async () => {
@@ -89,17 +96,21 @@ export function AppShell() {
         {/* One thin bar: what this is + reset */}
         <div className="flex items-center justify-between gap-3 border-b border-[#F0D9A0] bg-[#FFF6DF] px-4 py-2 text-sm text-[#5C4300] md:px-6">
         <span><strong>Demo</strong> · Sandbox · shared · starts fresh after 30 min idle</span>
-          <button
-            title="Reloads the sample academy and sends fresh PayPal sandbox bills. Takes about 10 seconds."
-            onClick={resetDemo}
-            disabled={resetting}
-            className="min-h-10 rounded-lg bg-[#7A4F00] px-4 font-semibold text-white hover:bg-[#5C3B00] disabled:opacity-60"
-          >
-            {resetting ? "Resetting…" : "↺ Reset"}
-          </button>
+             <div className="flex items-center gap-2">
+            <ParentViewButton />
+            <button
+              title="Reloads the sample academy and sends fresh PayPal sandbox bills. Takes about 10 seconds."
+              onClick={resetDemo}
+              disabled={resetting}
+              className="min-h-10 rounded-lg bg-[#7A4F00] px-4 font-semibold text-white hover:bg-[#5C3B00] disabled:opacity-60"
+            >
+              {resetting ? "Resetting…" : "↺ Reset"}
+            </button>
+          </div>
         </div>
-
-        <Outlet />
+        {ready ? <Outlet /> : (
+          <p className="p-8 text-neutral-500">Getting the demo ready… The first visit can take up to a minute.</p>
+        )}
       </div>
 
       {toast && (

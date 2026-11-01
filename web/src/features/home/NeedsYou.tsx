@@ -26,6 +26,12 @@ async function post<T>(url: string, body?: unknown): Promise<T> {
   if (!res.ok) throw new Error(data?.problem ?? `Something went wrong (${res.status})`)
   return data as T
 }
+// PayPal's own words, in plain English.
+// What PayPal's status means for the owner: is the family's PayPal bill paid?
+const payPalWords: Record<string, string> = {
+  DRAFT: "Not sent yet", SENT: "Unpaid", UNPAID: "Unpaid",
+  PARTIALLY_PAID: "Partly paid", PAID: "Paid", MARKED_AS_PAID: "Paid",
+}
 
 export function NeedsYou({ version = 0, onChanged }: { version?: number; onChanged?: () => void }) {
   const [items, setItems] = useState<NeedsYouItem[] | null>(null)
@@ -144,10 +150,13 @@ export function NeedsYou({ version = 0, onChanged }: { version?: number; onChang
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
-                <Button variant="ghost" disabled={busy} onClick={() => openPayPalBill(item.payerId)}
-              className="text-[#16476A] underline-offset-4 hover:underline">
-              PayPal bill ↗
-            </Button>
+                    {item.payPalInvoiceId && (
+              <button onClick={() => openPayPalBill(item.payerId)} disabled={busy}
+                title={`PayPal invoice ${item.payPalInvoiceId}. Status from PayPal: ${item.payPalStatus ?? "unknown"}`}
+                className="flex min-h-9 items-center gap-1.5 whitespace-nowrap rounded-full border border-[#CFE0EC] bg-[#F2F7FB] px-3 text-sm font-semibold text-[#16476A] hover:bg-[#E6EFF6]">
+                PayPal bill · {payPalWords[item.payPalStatus ?? ""] ?? item.payPalStatus ?? "Open"} ↗
+              </button>
+            )}
             <Button variant="outline" disabled={busy}
               onClick={() => (open === item.payerId ? setOpen(null) : openForm(item))}>
               {item.kind === "parent-says-paid" ? "Confirm received" : "Paid another way"}

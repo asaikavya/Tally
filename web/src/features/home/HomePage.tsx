@@ -31,7 +31,7 @@ export function HomePage() {
     <main className="mx-auto flex max-w-5xl flex-col gap-6 p-8">
             <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="text-sm text-neutral-500">November</p>
+       <p className="text-sm text-neutral-500">November · {data.payPalBills} PayPal bills sent by Tally</p>
           <h1 className="text-3xl font-extrabold tracking-tight">
             Every payment, <span className="text-[#1F5F8B]">accounted for.</span>
           </h1>
@@ -49,10 +49,10 @@ export function HomePage() {
           </CardContent>
         </Card>
         <Card>
-          <CardHeader><CardTitle className="text-sm text-neutral-500">Recorded outside PayPal</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="text-sm text-neutral-500">Paid outside PayPal</CardTitle></CardHeader>
           <CardContent>
             <p className="text-3xl font-bold">{money(data.recordedOutsidePayPal)}</p>
-            <p className="text-sm text-neutral-500">Zelle, UPI, cash, checks</p>
+            <p className="text-sm text-neutral-500">Zelle, UPI, cash, checks · noted on PayPal</p>
           </CardContent>
         </Card>
         <Card>

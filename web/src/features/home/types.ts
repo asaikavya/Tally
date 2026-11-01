@@ -6,6 +6,7 @@ export type HomeSummary = {
   stillDue: number
   late: number
   lateCharges: number
+  payPalBills: number
 }
 export type NeedsYouItem = {
   kind: "late" | "parent-says-paid"
@@ -16,4 +17,6 @@ export type NeedsYouItem = {
   daysLate: number
   lines: string[]
   note: string | null
+  payPalInvoiceId: string | null
+  payPalStatus: string | null
 }

@@ -5,6 +5,7 @@ import { WelcomeCard } from "@/features/demo/WelcomeCard"
 import { useShowMe } from "@/features/demo/useShowMe"
 import { STEPS } from "@/features/demo/story"
 import { SidebarSamples } from "@/features/home/SidebarSamples"
+import { GuideCard } from "@/features/demo/GuideCard"
 
 type ResetInfo = { families: number; payPalBillsSent: number; warnings: string[] }
 
@@ -111,6 +112,7 @@ export function AppShell() {
         </div>
       )}
       {welcome && <WelcomeCard onClose={closeWelcome} />}
+      <GuideCard />
     </div>
   )
 }

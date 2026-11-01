@@ -19,8 +19,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers()
     .AddJsonOptions(o => o.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter()));
 builder.Services.AddOpenApi();
-builder.Services.AddDbContext<TallyDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("TallyDb")));
+
 
 builder.Services.AddOptions<PayPalOptions>()
     .Bind(builder.Configuration.GetSection(PayPalOptions.Section))

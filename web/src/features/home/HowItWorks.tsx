@@ -1,25 +1,20 @@
-import { ArrowRight, Image as ImageIcon, ScanText, FileCheck } from "lucide-react"
+import { ArrowRight } from "lucide-react"
 
-// The whole app in one line: what happens to a parent's screenshot.
-const PILLS = [
-  { icon: ImageIcon, text: "Parent sends a screenshot", start: true },
-  { icon: ScanText,  text: "AI reads it · Tally matches", start: false },
-  { icon: FileCheck, text: "Noted on the PayPal bill", start: false },
-]
+// The whole app in one line. Plain text on purpose: it explains, it isn't something to click.
+const STEPS = ["Parent sends a screenshot", "AI reads it, Tally matches it", "Noted on the PayPal bill"]
 
 export function HowItWorks() {
   return (
-    <div className="flex flex-wrap items-center gap-2 text-sm">
-      {PILLS.map((p, i) => (
-        <span key={p.text} className="flex items-center gap-2">
-          <span className={`flex items-center gap-1.5 rounded-full px-3 py-1 font-medium ${
-            p.start ? "bg-[#16476A] text-white" : "border border-neutral-200 bg-white text-neutral-700"}`}>
-            <p.icon className="size-4" aria-hidden="true" />
-            {p.text}
+    <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-neutral-600" aria-label="How Tally works">
+      {STEPS.map((s, i) => (
+        <span key={s} className="flex items-center gap-2">
+          <span className="flex items-center gap-1.5">
+            <span className="flex size-5 items-center justify-center rounded-full bg-[#E8F0F7] text-xs font-bold text-[#16476A]">{i + 1}</span>
+            {s}
           </span>
-          {i < PILLS.length - 1 && <ArrowRight className="size-4 text-[#16476A]" aria-hidden="true" />}
+          {i < STEPS.length - 1 && <ArrowRight className="size-3.5 text-neutral-400" aria-hidden="true" />}
         </span>
       ))}
-    </div>
+    </p>
   )
 }

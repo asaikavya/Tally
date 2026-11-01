@@ -72,13 +72,13 @@ export function AppShell() {
     <div className="flex min-h-svh flex-col bg-[#F6F5F1] text-neutral-900 md:flex-row">
       {/* Phone: slim top bar. Laptop: left sidebar. */}
       <aside className="flex flex-col gap-3 border-b border-neutral-200 bg-white p-3 md:min-h-svh md:w-56 md:gap-5 md:border-r md:border-b-0 md:p-4">
-        <div className="flex items-center gap-2.5 px-1.5">
+          <NavLink to="/" className="flex items-center gap-2.5 rounded-lg px-1.5 hover:opacity-80" aria-label="Tally home">
           <div className="flex size-8 items-center justify-center rounded-lg bg-[#1F5F8B] font-bold text-white">T</div>
           <div>
             <div className="text-lg font-bold leading-tight">Tally</div>
-            <div className="text-xs text-neutral-500">Melody Music Academy</div>
+            <div className="text-xs text-neutral-500">for Melody Music Academy</div>
           </div>
-        </div>
+        </NavLink>
         <nav className="flex flex-row gap-1 md:flex-col md:gap-0.5">
           <NavLink to="/" end className={link}>Home</NavLink>
           <NavLink to="/payments" className={link}>Payments</NavLink>

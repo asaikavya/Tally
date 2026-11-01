@@ -17,7 +17,7 @@ export function SampleReceipts() {
 
   return (
     <details className="rounded-xl border border-[#E8D5B0] bg-[#FBF3E4] p-3 md:hidden">
-      <summary className="cursor-pointer text-sm font-semibold text-[#6B4E16]">Simulate a parent sending</summary>
+         <summary className="cursor-pointer text-sm font-semibold text-[#6B4E16]">More cases to try</summary>
       <div className="mt-3 grid grid-cols-2 gap-2">
         {SAMPLES.map((s) => (
           <button key={s.key} type="button" disabled={busy !== null} onClick={() => run(s)}

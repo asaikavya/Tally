@@ -1,18 +1,19 @@
 import { useEffect, useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { getJson } from "@/lib/api"
+import { getJson,postFor } from "@/lib/api"
 import { money } from "@/lib/money"
 import { q } from "@/lib/demo"
 import type { NeedsYouItem } from "./types"
 import { ReminderPanel } from "./ReminderPanel"
+
 
 const METHODS = ["Zelle", "UPI", "Cash", "Check", "Other"]
 
 type Recorded = {
   paymentId: string; amount: number; credit: number
   lines: { student: string; offering: string; applied: number }[]
-  payPal: { noted: boolean; statusAfter: string | null }[]
+  payPal: { noted: boolean; statusAfter: string | null; payPalInvoiceId: string }[]
 }
 
 async function post<T>(url: string, body?: unknown): Promise<T> {
@@ -79,6 +80,17 @@ export function NeedsYou({ version = 0, onChanged }: { version?: number; onChang
       setBusy(false)
     }
   }
+    // Open the family's real PayPal bill (what the parent sees). Open the tab during the click so it isn't blocked.
+  async function openPayPalBill(payerId: string) {
+    const tab = window.open("about:blank", "_blank")
+    try {
+      const r = await postFor<{ url: string }>(`/api/payers/${payerId}/paypal-bill`)
+      if (tab) { tab.opener = null; tab.location.href = r.url }
+    } catch {
+      tab?.close()
+      setProblem("This family has no PayPal bill yet.")
+    }
+  }
 
   return (
     <section className="overflow-hidden rounded-2xl border border-neutral-200 bg-white">
@@ -97,9 +109,15 @@ export function NeedsYou({ version = 0, onChanged }: { version?: number; onChang
               {recorded.r.lines.map((l) => `${money(l.applied)} to ${l.student.split(" ")[0]} · ${l.offering}`).join(", ")}
               {recorded.r.credit > 0 ? ` · ${money(recorded.r.credit)} family credit` : ""}
               {" · "}
-              {recorded.r.payPal.length === 0 ? "no PayPal bill"
+                            {recorded.r.payPal.length === 0 ? "no PayPal bill"
                 : recorded.r.payPal.every((p) => p.noted) ? `noted on PayPal (${recorded.r.payPal.map((p) => p.statusAfter).join(", ")})`
                 : "PayPal note pending"}
+              {recorded.r.payPal.map((p) => (
+                <a key={p.payPalInvoiceId} href={`https://www.sandbox.paypal.com/invoice/p/#${p.payPalInvoiceId}`}
+                   target="_blank" rel="noopener noreferrer" className="ml-2 font-semibold text-[#16476A] underline">
+                  View on PayPal ↗
+                </a>
+              ))}
             </div>
           </div>
           <Button variant="outline" disabled={busy} onClick={undo}>{busy ? "Working…" : "Undo"}</Button>
@@ -121,11 +139,15 @@ export function NeedsYou({ version = 0, onChanged }: { version?: number; onChang
             </div>
             <p className="mt-1 text-sm text-neutral-600">
               {item.kind === "parent-says-paid"
-                ? `Says: ${item.note} — check your bank. Reminders are paused.`
+                 ? `Says they paid the ${money(item.amount)} balance${item.note ? ` (${item.note})` : ""}. Check your bank, then confirm.`
                 : `${item.lines.join(" · ")} — ${item.daysLate} ${item.daysLate === 1 ? "day" : "days"} late${item.country && item.country !== "US" ? ` · pays from ${item.country}` : ""}`}
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
+                <Button variant="ghost" disabled={busy} onClick={() => openPayPalBill(item.payerId)}
+              className="text-[#16476A] underline-offset-4 hover:underline">
+              PayPal bill ↗
+            </Button>
             <Button variant="outline" disabled={busy}
               onClick={() => (open === item.payerId ? setOpen(null) : openForm(item))}>
               {item.kind === "parent-says-paid" ? "Confirm received" : "Paid another way"}

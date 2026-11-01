@@ -15,7 +15,10 @@ public sealed record DemoProgressDto(
     bool ReminderSent,      // 4. a reminder went to Lucia
     bool PaidWithPayPal,    // 5. Lucia paid her PayPal bill (arrived by webhook)
     Guid? RaviPayerId,
-    Guid? LuciaPayerId);
+    Guid? LuciaPayerId,
+    decimal OutsideTotal,   // Zelle, check, cash… recorded since the reset
+    decimal PayPalTotal,    // Lucia's PayPal payment, applied to her bill
+    int PayPalNotes);       // notes Tally wrote on PayPal bills);
 
 // The demo guide asks "which steps are done?" The answer comes from real data, never a saved checklist.
 [ApiController]
@@ -51,8 +54,19 @@ public sealed class DemoProgressController(TallyDbContext db, IOptions<DemoOptio
         var paidWithPayPal = lucia != null && await db.Allocations.AnyAsync(a =>
             db.Payments.Any(p => p.Id == a.PaymentId && p.Source == PaymentSource.PayPal) &&
             db.Charges.Any(c => c.Id == a.ChargeId && c.Enrollment!.Member!.PayerId == lucia), ct);
+        var outsideTotal = await db.Payments
+    .Where(p => p.Source != PaymentSource.PayPal && p.PayerId != null)   // visitor's payments, not seeded history
+    .SumAsync(p => p.Amount, ct);
+
+        var payPalTotal = lucia == null ? 0 : await db.Allocations
+            .Where(a => db.Payments.Any(p => p.Id == a.PaymentId && p.Source == PaymentSource.PayPal) &&
+                        db.Charges.Any(c => c.Id == a.ChargeId && c.Enrollment!.Member!.PayerId == lucia))
+            .SumAsync(a => a.Amount, ct);
+
+        var payPalNotes = await db.PayPalNotes.CountAsync(ct);
 
         return new DemoProgressDto(zelleRead, notedOnPayPal, parentSaidPaid, parentConfirmed,
-                                   reminderSent, paidWithPayPal, ravi, lucia);
+                           reminderSent, paidWithPayPal, ravi, lucia,
+                           outsideTotal, payPalTotal, payPalNotes);
     }
 }

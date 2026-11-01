@@ -49,30 +49,46 @@ public sealed class ReceiptIntakeService(
             StorageKey = await store.SaveAsync(bytes, contentType, ct)
         };
         db.Receipts.Add(receipt);
+        // Same image already read? Reuse that reading: no second AI call for an exact copy.
+        var original = await db.Receipts.AsNoTracking()
+            .Where(x => x.ImageHash == receipt.ImageHash && x.AiRaw != null && x.Status != ReceiptStatus.Duplicate)
+            .OrderBy(x => x.UploadedAtUtc)
+            .FirstOrDefaultAsync(ct);
 
-        try
+        if (original is not null)
         {
-            var f = await reader.ReadAsync(bytes, contentType, ct);
-            receipt.AiRaw = JsonSerializer.Serialize(f);
-            receipt.Amount = f.Amount;
-            receipt.Currency = f.Currency;
-            receipt.PaidOn = DateOnly.TryParseExact(f.PaidOn, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var d) ? d : null;
-            receipt.SenderName = f.SenderName;
-            receipt.PaidTo = f.PaidTo;
-            receipt.Memo = f.Memo;
-            receipt.Reference = f.Reference;
-            receipt.Method = f.Method;
-
-            if (!f.LooksLikePaymentReceipt) { receipt.Status = ReceiptStatus.NeedsReview; receipt.Problem = "This doesn't look like a payment receipt."; }
-            else if (f.Amount is null or <= 0) { receipt.Status = ReceiptStatus.NeedsReview; receipt.Problem = "We couldn't read the amount. Please type it."; }
-            else receipt.Status = ReceiptStatus.Read;
+            receipt.AiRaw = original.AiRaw;
+            receipt.Amount = original.Amount; receipt.Currency = original.Currency; receipt.PaidOn = original.PaidOn;
+            receipt.SenderName = original.SenderName; receipt.PaidTo = original.PaidTo; receipt.Memo = original.Memo;
+            receipt.Reference = original.Reference; receipt.Method = original.Method;
+            receipt.Status = ReceiptStatus.Read;          // MarkIfDuplicateAsync below marks it Duplicate
         }
-        catch (Exception ex)
+        else
         {
-            // The AI failing must never lose the upload: a human can type the details.
-            log.LogWarning(ex, "AI could not read receipt {ReceiptId}", receipt.Id);
-            receipt.Status = ReceiptStatus.NeedsReview;
-            receipt.Problem = "We couldn't read this image automatically. Please type the details.";
+            try
+            {
+                var f = await reader.ReadAsync(bytes, contentType, ct);
+                receipt.AiRaw = JsonSerializer.Serialize(f);
+                receipt.Amount = f.Amount;
+                receipt.Currency = f.Currency;
+                receipt.PaidOn = DateOnly.TryParseExact(f.PaidOn, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var d) ? d : null;
+                receipt.SenderName = f.SenderName;
+                receipt.PaidTo = f.PaidTo;
+                receipt.Memo = f.Memo;
+                receipt.Reference = f.Reference;
+                receipt.Method = f.Method;
+
+                if (!f.LooksLikePaymentReceipt) { receipt.Status = ReceiptStatus.NeedsReview; receipt.Problem = "This doesn't look like a payment receipt."; }
+                else if (f.Amount is null or <= 0) { receipt.Status = ReceiptStatus.NeedsReview; receipt.Problem = "We couldn't read the amount. Please type it."; }
+                else receipt.Status = ReceiptStatus.Read;
+            }
+            catch (Exception ex)
+            {
+                // The AI failing must never lose the upload: a human can type the details.
+                log.LogWarning(ex, "AI could not read receipt {ReceiptId}", receipt.Id);
+                receipt.Status = ReceiptStatus.NeedsReview;
+                receipt.Problem = "We couldn't read this image automatically. Please type the details.";
+            }
         }
 
         await MarkIfDuplicateAsync(receipt, ct);

@@ -10,6 +10,8 @@ const chip: Record<string, string> = {
   Medium: "bg-[#FBF0D9] text-[#7A4F00]",
   Weak: "bg-neutral-100 text-neutral-600",
 }
+// Sandbox payer view of a PayPal invoice (what the family sees).
+const payPalInvoiceUrl = (id: string) => `https://www.sandbox.paypal.com/invoice/p/#${id}`
 
 // POST that reads our friendly { problem } message on 409.
 async function send<T>(url: string, body?: unknown): Promise<T> {
@@ -187,10 +189,15 @@ function ApprovedView({ a, busy, onUndo, onRetry }: {
         {a.payPal.map((p) => (
           <Fragment key={p.payPalInvoiceId}>
             <CheckRow ok={p.noted}>
-              <span className="font-semibold">
+               <span className="font-semibold">
                 {p.noted ? `Noted on the PayPal bill: ${money(p.amount)} paid outside PayPal` : "Not on the PayPal bill yet"}
               </span>
-              <span className="font-mono text-xs text-neutral-500">{p.payPalInvoiceId}</span>
+              <span className="flex flex-wrap items-center gap-2 text-sm">
+                <span className="text-neutral-600">PayPal invoice</span>
+                <span className="font-mono font-semibold text-[#16476A]">{p.payPalInvoiceId}</span>
+                <a href={payPalInvoiceUrl(p.payPalInvoiceId)} target="_blank" rel="noopener noreferrer"
+                   className="font-semibold text-[#16476A] underline">View on PayPal ↗</a>
+              </span>
             </CheckRow>
             {p.noted && (
               <CheckRow ok>

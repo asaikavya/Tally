@@ -77,6 +77,15 @@ app.UseStaticFiles();                        // ...and its JS/CSS from wwwroot
 app.UseAuthorization();
 
 app.MapGet("/health", () => Results.Ok("ok"));   // for uptime checks: never touches the database
+// Demo: remember the last real action, so an unused shared demo can start fresh for the next visitor.
+app.Use(async (ctx, next) =>
+{
+    if (HttpMethods.IsPost(ctx.Request.Method)
+        && ctx.Request.Path.StartsWithSegments("/api")
+        && !ctx.Request.Path.StartsWithSegments("/api/demo/fresh-if-idle"))
+        DemoActivity.Touch();
+    await next();
+});
 app.MapControllers();
 app.MapFallbackToFile("index.html");         // React routes like /pay/... and /receipts/... load the app
 

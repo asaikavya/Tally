@@ -8,4 +8,5 @@ public sealed class DemoOptions
     public string PayerEmail { get; set; } = "";          // sandbox personal account; all demo families use it
     public string? MeeraPaidInvoiceId { get; set; }       // sandbox invoices that were really paid once
     public string? LakshmiPaidInvoiceId { get; set; }
+    public int IdleResetMinutes { get; set; } = 30;   // 0 = never reset by itself
 }

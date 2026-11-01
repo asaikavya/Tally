@@ -19,9 +19,9 @@ export function SidebarSamples() {
   return (
     <section className="mx-3 mt-4 hidden flex-col gap-2 rounded-xl border border-[#E8D5B0] bg-[#FBF3E4] p-3 md:flex">
       <span className="flex items-center gap-1.5 text-xs font-semibold text-[#6B4E16]">
-        <Smartphone className="size-3.5" aria-hidden="true" /> Simulate a parent sending
+        <Smartphone className="size-3.5" aria-hidden="true" /> More cases to try
       </span>
-      {SAMPLES.map((s) => (
+      {SAMPLES.filter((s) => s.key !== "exact").map((s) => (
         <button key={s.key} type="button" disabled={busy !== null} onClick={() => run(s)}
           className="flex flex-col items-start rounded-lg border border-[#E8D5B0] bg-white px-2.5 py-1.5 text-left hover:border-[#16476A] disabled:cursor-wait disabled:opacity-60">
           <span className="text-sm font-semibold">{busy === s.key ? "Reading…" : s.label}</span>

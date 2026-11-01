@@ -59,7 +59,7 @@ export function HomePage() {
           <CardHeader><CardTitle className="text-sm text-neutral-500">Late</CardTitle></CardHeader>
           <CardContent>
             <p className="text-3xl font-bold text-red-700">{money(data.late)}</p>
-            <p className="text-sm text-neutral-500">{data.lateCharges} charges past due</p>
+                      <p className="text-sm text-neutral-500">{data.lateCharges} {data.lateCharges === 1 ? "charge" : "charges"} past due</p>
           </CardContent>
         </Card>
       </div>

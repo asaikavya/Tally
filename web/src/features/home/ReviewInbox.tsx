@@ -80,7 +80,7 @@ export function ReviewInbox({ version = 0, onApproved }: { version?: number; onA
     <section className="flex flex-col gap-4 rounded-2xl border border-neutral-200 bg-white p-5">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 className="text-lg font-extrabold">Receipts to check · {total}</h2>
-        <span className="text-sm text-neutral-500">Nothing is recorded until you approve.</span>
+        <span className="text-sm text-neutral-500">Waiting for your OK before PayPal is updated.</span>
       </div>
 
       {result && (
@@ -99,9 +99,9 @@ export function ReviewInbox({ version = 0, onApproved }: { version?: number; onA
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <div className="font-bold">
-                ✓ {queue.sure.length} sure {queue.sure.length === 1 ? "match" : "matches"} ready ({money(queue.sureTotal)})
+                 ✓ {queue.sure.length} {queue.sure.length === 1 ? "receipt" : "receipts"} matched ({money(queue.sureTotal)})
               </div>
-              <div className="text-sm text-neutral-600">Known family, and only one way the amount fits. Untick any you want to look at first.</div>
+                            <div className="text-sm text-neutral-600">Each one is matched to a family and the exact classes it pays for. Untick any you want to check first.</div>
             </div>
             <Button className="min-h-11" disabled={busy || picked.size === 0} onClick={approveAll}>
               {busy ? `Approving ${picked.size}…` : `Approve & note on PayPal · ${picked.size} (${money(pickedTotal)})`}
@@ -115,7 +115,7 @@ export function ReviewInbox({ version = 0, onApproved }: { version?: number; onA
                   aria-label={`Include ${i.family}`} />
                 <div className="min-w-0 flex-1">
                   <span className="font-semibold">{i.family}</span>
-                  <span className="text-neutral-600"> · {i.covers.map((c) => c.label).join(" + ")}</span>
+                                 <span className="text-neutral-600"> · {i.covers.map((c) => `${c.label} ${money(c.amount)}`).join(" + ")}</span>
                   <div className="text-xs text-neutral-500">{i.method ?? "Payment"}{i.senderName ? ` from ${i.senderName}` : ""}</div>
                 </div>
                 <span className="font-semibold">{money(i.amount ?? 0)}</span>

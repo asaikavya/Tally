@@ -3,6 +3,7 @@ import { useEffect, useState } from "react"
 import { SidebarSamples } from "@/features/home/SidebarSamples"
 import { GuideCard } from "@/features/demo/GuideCard"
 import { ParentViewButton } from "@/features/demo/ParentViewButton"
+import { TestBuyerLogin } from "@/features/demo/TestBuyerLogin"
 
 type ResetInfo = { families: number; payPalBillsSent: number; warnings: string[] }
 
@@ -96,7 +97,8 @@ export function AppShell() {
         {/* One thin bar: what this is + reset */}
         <div className="flex items-center justify-between gap-3 border-b border-[#F0D9A0] bg-[#FFF6DF] px-4 py-2 text-sm text-[#5C4300] md:px-6">
         <span><strong>Demo</strong> · Sandbox · shared · starts fresh after 30 min idle</span>
-             <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2">
+            <TestBuyerLogin />
             <ParentViewButton />
             <button
               title="Reloads the sample academy and sends fresh PayPal sandbox bills. Takes about 10 seconds."

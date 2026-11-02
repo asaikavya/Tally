@@ -38,23 +38,36 @@ public sealed class DemoController(DemoResetService reset, IOptions<DemoOptions>
     // tick however the visitor did them (any page, any tab).
 
     // POST api/demo/fresh-if-idle: called when the app opens. If the shared demo was used and then left
-    // alone, start it fresh so the next visitor begins at step 1.
+    // POST api/demo/fresh-if-idle: called when the app opens. If the shared demo was used and then left
+    // alone (or is empty), start it fresh so the next visitor begins at step 1.
     [HttpPost("fresh-if-idle")]
     public async Task<IActionResult> FreshIfIdle(CancellationToken ct)
     {
         var o = options.Value;
         if (!o.Enabled) return NotFound();
-        if (o.IdleResetMinutes <= 0) return Ok(new { reset = false });
 
-        var last = DemoActivity.LastUtc;
-        if (last is not null && DateTime.UtcNow - last < TimeSpan.FromMinutes(o.IdleResetMinutes))
-            return Ok(new { reset = false });                       // someone is using it right now
+        // Self-heal: an empty demo (e.g. a reset that failed halfway) is always rebuilt for the next visitor.
+        var empty = !await db.Payers.AnyAsync(ct);
 
-        if (!await WasUsedAsync(ct)) return Ok(new { reset = false });   // already fresh: nothing to do
+        if (!empty)
+        {
+            if (o.IdleResetMinutes <= 0) return Ok(new { reset = false });
 
-        if (!await Gate.WaitAsync(0)) return Ok(new { reset = false });  // another reset is running
+            var last = DemoActivity.LastUtc;
+            if (last is not null && DateTime.UtcNow - last < TimeSpan.FromMinutes(o.IdleResetMinutes))
+                return Ok(new { reset = false });                            // someone is using it right now
+
+            if (!await WasUsedAsync(ct)) return Ok(new { reset = false });   // already fresh
+        }
+
+        // If another visitor's reset is already running, WAIT for it instead of showing a half-wiped demo.
+        await Gate.WaitAsync(ct);
         try
         {
+            // Re-check after waiting: someone may have just made it fresh.
+            if (await db.Payers.AnyAsync(ct) && !await WasUsedAsync(ct))
+                return Ok(new { reset = false });
+
             var result = await reset.ResetAsync(CancellationToken.None);
             return Ok(new { reset = true, result });
         }

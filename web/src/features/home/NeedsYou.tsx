@@ -6,7 +6,7 @@ import { money } from "@/lib/money"
 import { q } from "@/lib/demo"
 import type { NeedsYouItem } from "./types"
 import { ReminderPanel } from "./ReminderPanel"
-
+import { markPayPalOpened } from "@/lib/paypalReturn"
 
 const METHODS = ["Zelle", "UPI", "Cash", "Check", "Other"]
 
@@ -88,6 +88,7 @@ export function NeedsYou({ version = 0, onChanged }: { version?: number; onChang
   }
     // Open the family's real PayPal bill (what the parent sees). Open the tab during the click so it isn't blocked.
   async function openPayPalBill(payerId: string) {
+     markPayPalOpened()
     const tab = window.open("about:blank", "_blank")
     try {
       const r = await postFor<{ url: string }>(`/api/payers/${payerId}/paypal-bill`)

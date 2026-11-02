@@ -4,6 +4,7 @@ import { SidebarSamples } from "@/features/home/SidebarSamples"
 import { GuideCard } from "@/features/demo/GuideCard"
 import { ParentViewButton } from "@/features/demo/ParentViewButton"
 import { TestBuyerLogin } from "@/features/demo/TestBuyerLogin"
+import { checkPayPalIfReturning } from "@/lib/paypalReturn"
 
 type ResetInfo = { families: number; payPalBillsSent: number; warnings: string[] }
 
@@ -52,6 +53,13 @@ export function AppShell() {
         setReady(true)
       })
       .catch(() => setReady(true))            // never block the app because of this check
+  }, [])
+
+    // Coming back from a PayPal tab: ask PayPal for news (covers local, and a slow webhook on live).
+  useEffect(() => {
+    const onFocus = () => { void checkPayPalIfReturning() }
+    window.addEventListener("focus", onFocus)
+    return () => window.removeEventListener("focus", onFocus)
   }, [])
 
   const resetDemo = async () => {
@@ -110,7 +118,9 @@ export function AppShell() {
             </button>
           </div>
         </div>
-        {ready ? <Outlet /> : (
+         {resetting ? (
+          <p className="p-8 text-neutral-500">Starting the demo fresh… about 10–20 seconds.</p>
+        ) : ready ? <Outlet /> : (
           <p className="p-8 text-neutral-500">Getting the demo ready… The first visit can take up to a minute.</p>
         )}
       </div>

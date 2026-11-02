@@ -6,6 +6,7 @@ import { money } from "@/lib/money"
 import { useAutoRefresh } from "@/lib/useAutoRefresh"
 import { uploadSample } from "@/features/home/samples"
 import { STEPS, type Progress, type StepAction } from "./guideSteps"
+import { markPayPalOpened } from "@/lib/paypalReturn"
 
 const SEEN_KEY = "tally-guide-seen"
 
@@ -86,7 +87,10 @@ export function GuideCard() {
     try {
       if (kind === "try-zelle") navigate(`/receipts/${await uploadSample("zelle-r-kumar-170.png")}`)
       if (kind === "parent-page" && progress.raviPayerId) await openFromServer(`/api/payers/${progress.raviPayerId}/pay-link`)
-      if (kind === "paypal-bill" && progress.luciaPayerId) await openFromServer(`/api/payers/${progress.luciaPayerId}/paypal-bill`)
+      if (kind === "paypal-bill" && progress.luciaPayerId){
+        markPayPalOpened()
+        await openFromServer(`/api/payers/${progress.luciaPayerId}/paypal-bill`)
+      } 
     } finally {
       setBusy(false)
       load()

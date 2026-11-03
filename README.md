@@ -211,7 +211,7 @@ docker run --env-file .env -p 8080:10000 tally   # http://localhost:8080
 - CSV import for students, classes and prices
 - Several organizers in one Tally (separate accounts and sign-in)
 - Alerts when a receipt arrives
-- **Ask Tally agent**: a Semantic Kernel tool-calling assistant for hands-free batch operations (e.g. "Draft reminders for everyone who is late"), with the owner still approving before anything is sent
+- Ask Tally agent: a Semantic Kernel tool-calling assistant for hands-free batch operations (e.g. "Draft reminders for everyone who is late"), with the owner still approving before anything is sent
 
 ---
 

@@ -16,7 +16,7 @@ export function FamilyCell(props: CustomCellRendererProps<PaymentRow>) {
         <span
           title={`PayPal status: ${first.payPalStatus}`}
           className="whitespace-nowrap rounded border border-[#CFE0EC] bg-[#F2F7FB] px-2 py-0.5 text-xs font-semibold text-[#16476A]">
-          PayPal · {paypalStatusLabel[first.payPalStatus] ?? first.payPalStatus.toLowerCase()}
+           PayPal · {paypalStatusLabel[first.payPalStatus] ?? first.payPalStatus}
         </span>
       )}
             {(first?.familyCredit ?? 0) > 0 && (

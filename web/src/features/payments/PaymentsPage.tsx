@@ -35,18 +35,18 @@ export function PaymentsPage() {
   useEffect(() => { load() }, [load])
   useAutoRefresh(load)      // a PayPal payment shows up by itself; open groups and filters stay as they are
 
-  const columns = useMemo<ColDef<PaymentRow>[]>(() => [
+   const columns = useMemo<ColDef<PaymentRow>[]>(() => [
     { field: "family", rowGroup: true, hide: true },
-    { field: "student", headerName: "Student", minWidth: 140 },
-    { field: "offering", headerName: "Class", minWidth: 100 },
-    { field: "plan", headerName: "Plan", maxWidth: 110 },
-       { field: "amountDue", headerName: "Amount", aggFunc: "sum", type: "rightAligned", minWidth: 120,
+    { field: "student", headerName: "Student", minWidth: 130 },
+    { field: "offering", headerName: "Class", minWidth: 90 },
+    { field: "plan", headerName: "Plan", minWidth: 90, maxWidth: 110 },
+    { field: "amountDue", headerName: "Amount", aggFunc: "sum", type: "rightAligned", minWidth: 115,
       cellClass: ["currency", "ag-right-aligned-cell"], valueFormatter: (p) => money(p.value ?? 0) },
-    { field: "remaining", headerName: "Still due", aggFunc: "sum", type: "rightAligned", minWidth: 120,
+   { field: "remaining", headerName: "Still due", aggFunc: "sum", type: "rightAligned", minWidth: 115,
       cellClass: ["currency", "ag-right-aligned-cell"], valueFormatter: (p) => money(p.value ?? 0) },
-    { field: "status", headerName: "Status", aggFunc: "familyStatus", cellRenderer: StatusPill, minWidth: 120 },
+        { field: "status", headerName: "Status", aggFunc: "familyStatus", cellRenderer: StatusPill, minWidth: 120 },
     { field: "paidVia", headerName: "Paid via", aggFunc: "distinctJoin", minWidth: 110 },
-    { headerName: "", colId: "actions", cellRenderer: ActionCell, minWidth: 140, maxWidth: 150,
+    { headerName: "", colId: "actions", cellRenderer: ActionCell, minWidth: 130, maxWidth: 140,
       pinned: "right", sortable: false, filter: false },
   ], [])
 
@@ -64,7 +64,7 @@ export function PaymentsPage() {
     })
 
   return (
-    <main className="mx-auto flex max-w-7xl flex-col gap-5 p-8">
+      <main className="mx-auto flex w-full max-w-screen-2xl flex-col gap-5 p-8">
       <div className="flex flex-wrap items-end justify-between gap-3">
       <div>
           <h1 className="text-3xl font-extrabold tracking-tight">November payments</h1>
@@ -99,7 +99,7 @@ export function PaymentsPage() {
           rowData={shown}
           columnDefs={columns}
           defaultColDef={{ sortable: true, filter: true, resizable: true, flex: 1, minWidth: 90, suppressHeaderMenuButton: true }}
-          autoGroupColumnDef={{ headerName: "Family", minWidth: 290, cellRendererParams: { innerRenderer: FamilyCell, suppressCount: true } }}
+                    autoGroupColumnDef={{ headerName: "Family", minWidth: 340, cellRendererParams: { innerRenderer: FamilyCell, suppressCount: true } }}
           aggFuncs={{ familyStatus, distinctJoin }}
           suppressAggFuncInHeader
           groupDefaultExpanded={1}

@@ -7,6 +7,7 @@ import { q } from "@/lib/demo"
 import type { NeedsYouItem } from "./types"
 import { ReminderPanel } from "./ReminderPanel"
 import { markPayPalOpened } from "@/lib/paypalReturn"
+import { paypalStatusLabel } from "@/lib/paypalStatus"
 
 const METHODS = ["Zelle", "UPI", "Cash", "Check", "Other"]
 
@@ -28,10 +29,6 @@ async function post<T>(url: string, body?: unknown): Promise<T> {
 }
 // PayPal's own words, in plain English.
 // What PayPal's status means for the owner: is the family's PayPal bill paid?
-const payPalWords: Record<string, string> = {
-  DRAFT: "Not sent yet", SENT: "Unpaid", UNPAID: "Unpaid",
-  PARTIALLY_PAID: "Partly paid", PAID: "Paid", MARKED_AS_PAID: "Paid",
-}
 
 export function NeedsYou({ version = 0, onChanged }: { version?: number; onChanged?: () => void }) {
   const [items, setItems] = useState<NeedsYouItem[] | null>(null)
@@ -155,7 +152,7 @@ export function NeedsYou({ version = 0, onChanged }: { version?: number; onChang
               <button onClick={() => openPayPalBill(item.payerId)} disabled={busy}
                 title={`PayPal invoice ${item.payPalInvoiceId}. Status from PayPal: ${item.payPalStatus ?? "unknown"}`}
                 className="flex min-h-9 items-center gap-1.5 whitespace-nowrap rounded-full border border-[#CFE0EC] bg-[#F2F7FB] px-3 text-sm font-semibold text-[#16476A] hover:bg-[#E6EFF6]">
-                PayPal bill · {payPalWords[item.payPalStatus ?? ""] ?? item.payPalStatus ?? "Open"} ↗
+                    PayPal bill · {paypalStatusLabel[item.payPalStatus ?? ""] ?? item.payPalStatus ?? "Open"} ↗
               </button>
             )}
             <Button variant="outline" disabled={busy}

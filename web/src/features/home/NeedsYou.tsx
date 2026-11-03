@@ -102,7 +102,7 @@ export function NeedsYou({ version = 0, onChanged }: { version?: number; onChang
         <h2 className="text-lg font-bold">
           Needs you {items && <span className="font-medium text-neutral-500">· {items.length}</span>}
         </h2>
-        <span className="text-sm text-neutral-500">Everything else is done.</span>
+      <span className="text-sm text-neutral-500">Only exceptions show here. PayPal payments and matched receipts update by themselves.</span>
       </div>
 
       {recorded && (

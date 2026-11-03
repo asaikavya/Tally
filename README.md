@@ -59,7 +59,7 @@ And for the families who pay **through PayPal**, the owner does **nothing** — 
 
 | Email | Password |
 |---|---|
-| `sb-agnwz53636700@personal.example.com` | TallyJudge2026!` |
+| sb-agnwz53636700@personal.example.com | TallyJudge2026! |
 
 Good to know:
 

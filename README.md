@@ -68,6 +68,17 @@ Good to know:
 - **Free hosting.** The first visit after a quiet period can take up to a minute while the database wakes up.
 - **PayPal updates arrive by webhook** within seconds. Coming back to the Tally tab after paying also checks
   PayPal straight away.
+  ## What's on the screen
+
+![Tally's Home screen, with what each part is for](docs/screen-guide.png)
+
+## The 4 ways a payment arrives
+
+![How each kind of payment reaches the family's PayPal bill](docs/payment-paths.png)
+
+**Rule of thumb:** PayPal payments update by themselves. A screenshot gets **Approve**.
+No screenshot gets **Confirm received** (or **Paid another way** if the parent didn't say).
+Not paid yet? **Send reminder**, which goes out through PayPal with a Pay button.
 
 ---
 
@@ -211,8 +222,10 @@ docker run --env-file .env -p 8080:10000 tally   # http://localhost:8080
 - CSV import for students, classes and prices
 - Several organizers in one Tally (separate accounts and sign-in)
 - Alerts when a receipt arrives
-- Ask Tally agent: a Semantic Kernel tool-calling assistant for hands-free batch operations (e.g. "Draft reminders for everyone who is late"), with the owner still approving before anything is sent
+- Ask Tally agent: a Semantic Kernel tool-calling assistant for hands-free batch operations (e.g. "Draft reminders for everyone who is late"), with the owner still approving before anything is sent.
 
+
+  
 ---
 
 ## License

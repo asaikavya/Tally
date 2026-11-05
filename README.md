@@ -12,7 +12,9 @@ Tally fixes that:
 2. **AI reads it** (amount, date, sender, method), and **Tally matches it** to the right family and classes.
 3. **The owner approves** — and Tally **notes the payment on the family's real PayPal invoice**.
 
-PayPal and Tally always agree, whether the family paid through PayPal or not.
+PayPal and Tally always agree, whether the family paid through PayPal or not. Small academies want PayPal to be
+their one source of truth, so Tally keeps it that way: every payment ends up on the family's PayPal invoice, and
+every remaining balance and reminder comes with a **Pay with PayPal** button.
 
 > Built for the Devpost **Build What's Next with PayPal and AI** hackathon. Runs on the **PayPal Sandbox** with a
 > sample academy — no real money, no real people.
@@ -68,7 +70,10 @@ Good to know:
 - **Free hosting.** The first visit after a quiet period can take up to a minute while the database wakes up.
 - **PayPal updates arrive by webhook** within seconds. Coming back to the Tally tab after paying also checks
   PayPal straight away.
-  ## What's on the screen
+
+---
+
+## What's on the screen
 
 ![Tally's Home screen, with what each part is for](docs/screen-guide.png)
 
@@ -139,7 +144,9 @@ flowchart LR
 | ✅ | Same | Draft a friendly reminder in the family's language (template fallback if AI is unavailable) |
 | ❌ | — | Matching, money math, fees, credit, approvals — **all deterministic C# (`decimal`)** |
 
-The AI never sees the families list; it only reads the image.
+**Privacy by design:** the receipt reader never sees your families list; it only gets the image. The reminder
+writer sees only the one family it's writing to. Finding the family is
+Tally's own code.
 
 ---
 
@@ -148,6 +155,8 @@ The AI never sees the families list; it only reads the image.
 - **Parents upload their own** screenshots from their private family link — the owner doesn't have to.
 - **Bulk upload or paste (Ctrl+V)** many screenshots at once; Tally reads them one by one.
 - **Sure matches arrive pre-ticked** → one click: *Approve & note on PayPal*. Unclear ones wait in "Needs a look".
+- **Remind all late families** in one go: AI drafts each reminder (in each family's language), you untick anyone
+  you want to skip, and PayPal sends them with a Pay button.
 - **Needs you shows only exceptions.** PayPal payments and matched receipts update by themselves; only late or
   unconfirmed families appear there.
 
@@ -211,21 +220,19 @@ docker run --env-file .env -p 8080:10000 tally   # http://localhost:8080
 - **Shared demo:** visitors at the same moment see each other's actions. It starts fresh after 30 idle minutes.
 - **Free hosting:** the first visit after a quiet period can take up to a minute.
 - **A bank-fee difference stays visible as owed** (e.g. $1.80); the owner decides. Tally never hides a difference.
-- **Reminders are sent one family at a time.**
 - **Sandbox only;** one organizer per deployment (one sample academy in the demo).
 
 ## What's next
 
-- Automatic reminders on a schedule, and "remind all late families"
+- Automatic reminders on a schedule
 - Forward receipts by email or chat instead of uploading
 - "Count a close match as paid in full (bank fee)" option
 - CSV import for students, classes and prices
 - Several organizers in one Tally (separate accounts and sign-in)
 - Alerts when a receipt arrives
-- Ask Tally agent: a Semantic Kernel tool-calling assistant for hands-free batch operations (e.g. "Draft reminders for everyone who is late"), with the owner still approving before anything is sent.
+- Ask Tally agent: a Semantic Kernel tool-calling assistant for hands-free batch operations (e.g. "Draft
+  reminders for everyone who is late"), with the owner still approving before anything is sent.
 
-
-  
 ---
 
 ## License

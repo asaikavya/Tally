@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Tally.Domain.Entities;
@@ -18,7 +18,9 @@ public sealed record DemoProgressDto(
     Guid? LuciaPayerId,
     decimal OutsideTotal,   // Zelle, check, cash… recorded since the reset
     decimal PayPalTotal,    // Lucia's PayPal payment, applied to her bill
-    int PayPalNotes);       // notes Tally wrote on PayPal bills);
+    int PayPalNotes,        // notes Tally wrote on PayPal bills
+    decimal RaviOwes,       // what Ravi still owes: 0 means the story can't continue for him
+    decimal LuciaOwes);     // what Lucia still owes
 
 // The demo guide asks "which steps are done?" The answer comes from real data, never a saved checklist.
 [ApiController]
@@ -28,7 +30,7 @@ public sealed class DemoProgressController(TallyDbContext db, IOptions<DemoOptio
     [HttpGet("progress")]
     public async Task<ActionResult<DemoProgressDto>> Progress(CancellationToken ct)
     {
-         if (!demo.Value.Enabled) return NotFound();   // ← turn on once the demo settings are injected
+        if (!demo.Value.Enabled) return NotFound();
 
         var people = await db.Payers.AsNoTracking()
             .Where(p => p.Name.StartsWith("Ravi") || p.Name.StartsWith("Lucia"))
@@ -54,9 +56,10 @@ public sealed class DemoProgressController(TallyDbContext db, IOptions<DemoOptio
         var paidWithPayPal = lucia != null && await db.Allocations.AnyAsync(a =>
             db.Payments.Any(p => p.Id == a.PaymentId && p.Source == PaymentSource.PayPal) &&
             db.Charges.Any(c => c.Id == a.ChargeId && c.Enrollment!.Member!.PayerId == lucia), ct);
+
         var outsideTotal = await db.Payments
-    .Where(p => p.Source != PaymentSource.PayPal && p.PayerId != null)   // visitor's payments, not seeded history
-    .SumAsync(p => p.Amount, ct);
+            .Where(p => p.Source != PaymentSource.PayPal && p.PayerId != null)   // visitor's payments, not seeded history
+            .SumAsync(p => p.Amount, ct);
 
         var payPalTotal = lucia == null ? 0 : await db.Allocations
             .Where(a => db.Payments.Any(p => p.Id == a.PaymentId && p.Source == PaymentSource.PayPal) &&
@@ -65,8 +68,17 @@ public sealed class DemoProgressController(TallyDbContext db, IOptions<DemoOptio
 
         var payPalNotes = await db.PayPalNotes.CountAsync(ct);
 
+        var raviOwes = await OwesAsync(ravi, ct);
+        var luciaOwes = await OwesAsync(lucia, ct);
+
         return new DemoProgressDto(zelleRead, notedOnPayPal, parentSaidPaid, parentConfirmed,
-                           reminderSent, paidWithPayPal, ravi, lucia,
-                           outsideTotal, payPalTotal, payPalNotes);
+                                   reminderSent, paidWithPayPal, ravi, lucia,
+                                   outsideTotal, payPalTotal, payPalNotes, raviOwes, luciaOwes);
     }
+
+    // Everything still open for one family.
+    private async Task<decimal> OwesAsync(Guid? payerId, CancellationToken ct) =>
+        payerId is null ? 0 : await db.Charges
+            .Where(c => c.Enrollment!.Member!.PayerId == payerId && c.AmountDue > c.AmountPaid)
+            .SumAsync(c => c.AmountDue - c.AmountPaid, ct);
 }

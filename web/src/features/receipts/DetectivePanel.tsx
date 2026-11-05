@@ -1,4 +1,5 @@
-import {Fragment, useCallback, useEffect, useState } from "react"
+import { Fragment, useCallback, useEffect, useState } from "react"
+import { Link } from "react-router"
 import { Button } from "@/components/ui/button"
 import { getJson } from "@/lib/api"
 import { money } from "@/lib/money"
@@ -55,8 +56,8 @@ function Step({ n, title, children }: { n: number; title: React.ReactNode; child
   )
 }
 
-function FamilyDetail({ f, busy, onApprove }: {
-  f: Finding; busy: boolean; onApprove: (payerId: string, chargeIds: string[]) => void
+function FamilyDetail({ f, busy, onApprove, onDismiss }: {
+  f: Finding; busy: boolean; onApprove: (payerId: string, chargeIds: string[]) => void; onDismiss: () => void
 }) {
   const options = f.coverage.options
   // One way to fit → pre-selected. Several → the owner must pick; Tally never guesses.
@@ -65,12 +66,35 @@ function FamilyDetail({ f, busy, onApprove }: {
   const picked = new Map(option?.lines.map((l) => [l.chargeId, l.amount]) ?? [])
   const charges = [...f.openCharges].sort(byDueStudentClass)
 
+  const who = (
+    <Step n={1} title={<>Who sent it? <span className="text-[#1E6B3A]">{f.name}</span>
+      {f.sender && <span className="ml-2 text-sm font-medium text-neutral-500">({f.sender.confidence.toLowerCase()})</span>}</>}>
+      <EvidenceList items={f.sender?.evidence ?? []} />
+    </Step>
+  )
+
+  // Nothing open for this family: say so plainly instead of showing empty steps.
+  if (charges.length === 0) {
+    return (
+      <>
+        {who}
+        <div className="rounded-lg border border-[#E8D5B0] bg-[#FBF3E4] p-4 text-[15px] text-[#4A3500]">
+          <p className="font-semibold">{f.name.split(" ")[0]} has already paid everything for this month.</p>
+          <p className="mt-1">
+            This may be a duplicate, or an early payment for next month. Nothing will be recorded.
+            Keep it for your records, or use <strong>Fix a detail</strong> above if Tally picked the wrong family.
+          </p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <Button variant="outline" disabled={busy} onClick={onDismiss}>Dismiss · nothing to record</Button>
+          </div>
+        </div>
+      </>
+    )
+  }
+
   return (
     <>
-      <Step n={1} title={<>Who sent it? <span className="text-[#1E6B3A]">{f.name}</span>
-        {f.sender && <span className="ml-2 text-sm font-medium text-neutral-500">({f.sender.confidence.toLowerCase()})</span>}</>}>
-        <EvidenceList items={f.sender?.evidence ?? []} />
-      </Step>
+      {who}
 
       <Step n={2} title={`What it covers: ${f.name.split(" ")[0]} has ${charges.length} open ${charges.length === 1 ? "charge" : "charges"}`}>
         <div className="flex flex-col gap-1.5">
@@ -120,10 +144,10 @@ function FamilyDetail({ f, busy, onApprove }: {
               {option.leftover > 0 && <li>{money(option.leftover)} kept as family credit</li>}
               <li>{option.stillDueAfter > 0 ? `${money(option.stillDueAfter)} still due` : "Nothing left to pay"}</li>
             </ul>
-             {option.note && option.leftover === 0 && <p className="text-sm text-[#7A4F00]">{option.note}</p>}
+            {option.note && option.leftover === 0 && <p className="text-sm text-[#7A4F00]">{option.note}</p>}
             <Button disabled={busy} className="min-h-12 self-start"
               onClick={() => onApprove(f.payerId, option.lines.map((l) => l.chargeId))}>
-               {busy ? "Noting it on PayPal…" : "Approve & note on PayPal bill"}
+              {busy ? "Noting it on PayPal…" : "Approve & note on PayPal bill"}
             </Button>
           </>
         ) : (
@@ -189,14 +213,15 @@ function ApprovedView({ a, busy, onUndo, onRetry }: {
         {a.payPal.map((p) => (
           <Fragment key={p.payPalInvoiceId}>
             <CheckRow ok={p.noted}>
-               <span className="font-semibold">
+              <span className="font-semibold">
                 {p.noted ? `Noted on the PayPal bill: ${money(p.amount)} paid outside PayPal` : "Not on the PayPal bill yet"}
               </span>
               <span className="flex flex-wrap items-center gap-2 text-sm">
                 <span className="text-neutral-600">PayPal invoice</span>
                 <span className="font-mono font-semibold text-[#16476A]">{p.payPalInvoiceId}</span>
                 <a href={payPalInvoiceUrl(p.payPalInvoiceId)} target="_blank" rel="noopener noreferrer"
-                   className="font-semibold text-[#16476A] underline">View on PayPal ↗</a>
+                   className="font-semibold text-[#16476A] underline">See the family's PayPal bill ↗</a>
+                <span className="text-xs text-neutral-500">(what the parent sees: the payment is listed, and only the rest is left to pay)</span>
               </span>
             </CheckRow>
             {p.noted && (
@@ -212,6 +237,13 @@ function ApprovedView({ a, busy, onUndo, onRetry }: {
         ))}
       </ol>
 
+      <div className="flex flex-wrap items-center gap-3 border-t border-[#9FD1AF] pt-4">
+        <Button render={<Link to="/" />}>Done · back to Home</Button>
+        <span className="text-sm text-neutral-600">
+          Home shows the new totals. Anything still owed stays on the family's PayPal bill, ready for them to pay.
+        </span>
+      </div>
+
       {!allNoted && (
         <Button disabled={busy} onClick={onRetry} className="self-start">Try PayPal again</Button>
       )}
@@ -226,13 +258,14 @@ export function DetectivePanel({ receiptId, status }: { receiptId: string; statu
   const [error, setError] = useState<string | null>(null)
   const [problem, setProblem] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+  const [dismissed, setDismissed] = useState(status === "Rejected")
 
   const loadDetective = useCallback(() => {
     getJson<DetectiveResult>(`/api/receipts/${receiptId}/detective`).then(setResult).catch((e: Error) => setError(e.message))
   }, [receiptId])
 
   useEffect(() => {
-    if (status === "Duplicate") return
+    if (status === "Duplicate" || status === "Rejected") return
     if (status === "Matched") {
       getJson<ApproveResult>(`/api/receipts/${receiptId}/approval`).then(setApproval).catch((e: Error) => setError(e.message))
     } else {
@@ -257,19 +290,49 @@ export function DetectivePanel({ receiptId, status }: { receiptId: string; statu
     catch (e) { setProblem((e as Error).message) }
     finally { setBusy(false) }
   }
-    async function retryPayPal() {
+
+  async function dismiss() {
+    setBusy(true); setProblem(null)
+    try { await send(`/api/receipts/${receiptId}/dismiss`); setDismissed(true) }
+    catch (e) { setProblem((e as Error).message) }
+    finally { setBusy(false) }
+  }
+
+  async function retryPayPal() {
     setBusy(true); setProblem(null)
     try { setApproval(await send<ApproveResult>(`/api/receipts/${receiptId}/paypal-note`)) }
     catch (e) { setProblem((e as Error).message) }
     finally { setBusy(false) }
   }
 
-  if (status === "Duplicate") return null
+  if (status === "Duplicate") {
+    return (
+      <section className="flex flex-col gap-3 rounded-2xl border border-neutral-200 bg-white p-6">
+        <h2 className="text-xl font-extrabold">Nothing to do: this is a copy</h2>
+        <p className="text-neutral-600">
+         Tally already has this receipt, so this copy won't be counted twice. If the original still needs your OK,
+          it's waiting in <strong>To review</strong> on Home.
+        </p>
+        <Button className="self-start" render={<Link to="/" />}>Done · back to Home</Button>
+      </section>
+    )
+  }
+
+  if (dismissed) {
+    return (
+      <section className="flex flex-col gap-3 rounded-2xl border border-neutral-200 bg-white p-6">
+        <h2 className="text-xl font-extrabold">Dismissed: nothing to record</h2>
+        <p className="text-neutral-600">Kept for your records. It no longer shows in To review, and nothing changed on PayPal.</p>
+        <Button className="self-start" render={<Link to="/" />}>Done · back to Home</Button>
+      </section>
+    )
+  }
+
   if (error) return <p className="text-red-700">Detective couldn't run: {error}</p>
 
   const problemBox = problem && <p className="rounded-lg bg-red-50 p-3 text-sm text-red-800">{problem}</p>
   if (approval) return <div className="flex flex-col gap-3">{problemBox}<ApprovedView a={approval} busy={busy} onUndo={undo} onRetry={retryPayPal} /></div>
-    if (!result) return <p className="text-neutral-500">Working it out…</p>
+  if (!result) return <p className="text-neutral-500">Working it out…</p>
 
   const shown = result.best ?? chosen
 
@@ -297,7 +360,7 @@ export function DetectivePanel({ receiptId, status }: { receiptId: string; statu
         </div>
       )}
 
-      {shown && <FamilyDetail key={shown.payerId} f={shown} busy={busy} onApprove={approve} />}
+      {shown && <FamilyDetail key={shown.payerId} f={shown} busy={busy} onApprove={approve} onDismiss={dismiss} />}
       {problemBox}
 
       {result.ruledOut.length > 0 && (

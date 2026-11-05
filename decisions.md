@@ -30,16 +30,16 @@ to PayPal (not just to Tally's database) keeps one consistent picture.
 
 ---
 
-## 3. The AI never sees the families list
+## 3. The AI sees as little as possible
 
-**Decision:** The receipt reader gets only the image. Finding the family happens in code, using known payer
-names (aliases) from past payments.
+**Decision:** The receipt reader gets only the image; it never sees the families list. Finding the family happens
+in code, using known payer names (aliases) from past payments. The reminder writer sees only the one family it is
+writing to.
 
 **Why:** Less personal data sent to the AI, smaller and cheaper prompts, and no chance of the AI "inventing" a
 family match.
 
-**Trade-off:** A brand-new sender with no history can't be matched automatically; the owner picks the family once,
-and Tally remembers it.
+**Trade-off:** A brand-new sender with no history can't be matched automatically; the owner picks the family.
 
 ---
 
@@ -120,3 +120,5 @@ clear message instead of an empty screen.
 was scanned with gitleaks before going public.
 
 **Why:** The repo is public and open source.
+
+**Trade-off:** Running it locally takes a few extra setup steps (user secrets instead of a settings file).

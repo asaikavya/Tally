@@ -121,7 +121,7 @@ export function AppShell() {
          {resetting ? (
           <p className="p-8 text-neutral-500">Starting the demo fresh… about 10–20 seconds.</p>
         ) : ready ? <Outlet /> : (
-                    <p className="p-8 text-neutral-500">Waking up the free-tier database… The first visit can take up to a minute; after that it's fast.</p>
+         <p className="p-8 text-neutral-500">Waking up the free-tier database… The first visit can take up to a minute; after that it's fast.</p>
         )}
       </div>
 

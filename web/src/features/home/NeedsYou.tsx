@@ -8,6 +8,7 @@ import type { NeedsYouItem } from "./types"
 import { ReminderPanel } from "./ReminderPanel"
 import { markPayPalOpened } from "@/lib/paypalReturn"
 import { paypalStatusLabel } from "@/lib/paypalStatus"
+import { RemindAllPanel } from "./RemindAllPanel"
 
 const METHODS = ["Zelle", "UPI", "Cash", "Check", "Other"]
 
@@ -40,7 +41,7 @@ export function NeedsYou({ version = 0, onChanged }: { version?: number; onChang
   const [busy, setBusy] = useState(false)
   const [problem, setProblem] = useState<string | null>(null)
   const [recorded, setRecorded] = useState<{ name: string; method: string; r: Recorded } | null>(null)
-
+  const [remindAll, setRemindAll] = useState(false)
   useEffect(() => {
     getJson<NeedsYouItem[]>(`/api/home/needs-you?${q}`).then(setItems).catch((e: Error) => setError(e.message))
   }, [version])
@@ -95,15 +96,31 @@ export function NeedsYou({ version = 0, onChanged }: { version?: number; onChang
       setProblem("This family has no PayPal bill yet.")
     }
   }
+  const late = items?.filter((i) => i.kind === "late") ?? []
 
   return (
     <section className="overflow-hidden rounded-2xl border border-neutral-200 bg-white">
-      <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-neutral-200 px-5 py-4">
+         <div className="flex flex-wrap items-center justify-between gap-2 border-b border-neutral-200 px-5 py-4">
         <h2 className="text-lg font-bold">
           Needs you {items && <span className="font-medium text-neutral-500">· {items.length}</span>}
         </h2>
-      <span className="text-sm text-neutral-500">Only exceptions show here. PayPal payments and matched receipts update by themselves.</span>
+        <div className="flex flex-wrap items-center gap-3">
+          <span className="text-sm text-neutral-500">Only exceptions show here. PayPal payments and matched receipts update by themselves.</span>
+          {late.length >= 2 && !remindAll && (
+            <Button variant="outline" disabled={busy} onClick={() => { setRemindFor(null); setOpen(null); setRemindAll(true) }}>
+              Remind all {late.length} late
+            </Button>
+          )}
+        </div>
       </div>
+
+      {remindAll && (
+        <RemindAllPanel
+          families={late.map((i) => ({ payerId: i.payerId, payerName: i.payerName, amount: i.amount }))}
+          onClose={() => setRemindAll(false)}
+          onDone={() => onChanged?.()}
+        />
+      )}
 
       {recorded && (
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-neutral-200 bg-[#EEF8F1] px-5 py-3 text-sm">

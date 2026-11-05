@@ -72,6 +72,22 @@ export function GuideCard() {
     }
   }
 
+  // A step can't happen any more (something was done out of order): start the shared demo over.
+  async function startFresh() {
+    if (!window.confirm("Start over? This resets the shared demo for everyone using it.")) return
+    setBusy(true)
+    try {
+      const res = await fetch("/api/demo/reset", { method: "POST" })
+      if (!res.ok) throw new Error(String(res.status))
+      const result = await res.json()
+      try { sessionStorage.setItem("tally-reset", JSON.stringify(result)) } catch { /* skip the message */ }
+      window.location.assign("/")                                // back to Home, guide at step 1
+    } catch {
+      setBusy(false)
+      setCheckNote("Reset didn't work. Try again in a moment.")
+    }
+  }
+
   async function openFromServer(path: string) {
     const tab = window.open("about:blank", "_blank")             // open during the click so it isn't blocked
     try {
@@ -117,7 +133,8 @@ export function GuideCard() {
 
   const step = STEPS[shown]
   const done = step.done(progress)
-  const action = !done ? step.action?.(progress) ?? null : null  // any unfinished step: steps can be done in any order
+  const blocked = !done ? step.blocked?.(progress) ?? null : null
+  const action = !done && !blocked ? step.action?.(progress) ?? null : null  // steps can be done in any order
   const badge = allDone ? "✓" : `${shown + 1}/${STEPS.length}`
 
   return (
@@ -133,8 +150,18 @@ export function GuideCard() {
           </div>
 
           <p className="text-[15px] font-semibold leading-snug">
-            {done ? <span className="text-[#1E6B3A]">✓ {step.doneText}</span> : step.say(progress)}
+            {done ? <span className="text-[#1E6B3A]">✓ {step.doneText}</span> : blocked ? "This step is out of order." : step.say(progress)}
           </p>
+
+          {blocked && (
+            <div className="flex flex-col gap-2 rounded-lg border border-[#E8D5B0] bg-[#FBF3E4] px-3 py-2 text-sm text-[#4A3500]">
+             <span>{blocked} Start fresh to follow the story from step 1, or tap <strong>Next</strong> to skip this step.</span><span>{blocked} Start fresh to follow the story from step 1.</span>
+              <button disabled={busy} onClick={startFresh}
+                className="min-h-10 rounded-lg bg-[#16476A] px-3 text-sm font-semibold text-white hover:bg-[#123A57] disabled:opacity-60">
+                {busy ? "Starting over…" : "↺ Start the guide fresh"}
+              </button>
+            </div>
+          )}
 
           {allDone && (
             <div className="flex flex-col gap-1 rounded-lg bg-[#EEF8F1] px-3 py-2 text-sm">
@@ -143,6 +170,15 @@ export function GuideCard() {
               <span>{progress.payPalNotes} {progress.payPalNotes === 1 ? "note" : "notes"} written on PayPal bills by Tally</span>
             </div>
           )}
+         {allDone && (
+            <div className="flex flex-col gap-1 rounded-lg bg-[#EEF8F1] px-3 py-2 text-sm">
+              <span className="font-semibold text-[#1E6B3A]">Every payment, accounted for.</span>
+              <span>{money(progress.outsideTotal)} paid outside PayPal · {money(progress.payPalTotal)} paid on PayPal</span>
+              <span>{progress.payPalNotes} {progress.payPalNotes === 1 ? "note" : "notes"} written on PayPal bills by Tally</span>
+            </div>
+          )}
+          
+          
 
           {action && (
             <button disabled={busy} onClick={() => act(action.kind)}
@@ -151,7 +187,7 @@ export function GuideCard() {
             </button>
           )}
 
-          {step.key === "paypal" && !done && (
+          {step.key === "paypal" && !done && !blocked && (
             <>
               <div className="flex items-center justify-between gap-2 rounded-lg bg-[#F1F6FA] px-3 py-2 text-sm">
                 <span>Paid already? PayPal tells Tally, usually within a minute.</span>
@@ -160,9 +196,9 @@ export function GuideCard() {
                   {checking ? "Checking…" : "Check with PayPal"}
                 </button>
               </div>
-              {checkNote && <p className="text-xs text-[#7A4F00]">{checkNote}</p>}
             </>
           )}
+          {checkNote && <p className="text-xs text-[#7A4F00]">{checkNote}</p>}
 
           <div className="flex items-center justify-between">
             <span className="flex gap-1" aria-hidden="true">

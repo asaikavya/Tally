@@ -1,6 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Tally.Api.Contracts;
+using Tally.Domain.Entities;
 using Tally.Domain.Matching;
 using Tally.Infrastructure.Data;
 using Tally.Infrastructure.Receipts;
@@ -57,6 +58,7 @@ public sealed class ReceiptsController(ReceiptIntakeService intake, TallyDbConte
             return Conflict(new { problem = ex.Message });
         }
     }
+
     // GET api/receipts/{id}/detective
     [HttpGet("{id:guid}/detective")]
     public async Task<ActionResult<DetectiveResult>> Detective(Guid id, [FromServices] DetectiveService detective, CancellationToken ct)
@@ -64,22 +66,42 @@ public sealed class ReceiptsController(ReceiptIntakeService intake, TallyDbConte
         var result = await detective.InvestigateAsync(id, ct);
         return result is null ? NotFound() : result;
     }
+
     [HttpPost("{id:guid}/approve")]
     public async Task<IActionResult> Approve(Guid id, ApproveRequest req,
-    [FromServices] ApprovalService approvals, CancellationToken ct)
-    => ToResult(await approvals.ApproveAsync(id, req, ct));
+        [FromServices] ApprovalService approvals, CancellationToken ct)
+        => ToResult(await approvals.ApproveAsync(id, req, ct));
 
     [HttpPost("{id:guid}/undo")]
     public async Task<IActionResult> Undo(Guid id,
         [FromServices] ApprovalService approvals, CancellationToken ct)
         => ToResult(await approvals.UndoAsync(id, ct));
+
     [HttpGet("{id:guid}/approval")]
     public async Task<IActionResult> Approval(Guid id, [FromServices] ApprovalService approvals, CancellationToken ct)
-    => await approvals.GetAsync(id, ct) is { } r ? Ok(r) : NotFound();
+        => await approvals.GetAsync(id, ct) is { } r ? Ok(r) : NotFound();
+
+    // POST api/receipts/{id}/dismiss — nothing to record (duplicate / early payment).
+    // Kept for the records, removed from "To review". Nothing changes on PayPal.
+    [HttpPost("{id:guid}/dismiss")]
+    public async Task<IActionResult> Dismiss(Guid id, CancellationToken ct)
+    {
+        var r = await db.Receipts.FirstOrDefaultAsync(x => x.Id == id, ct);
+        if (r is null) return NotFound();
+        if (r.Status == ReceiptStatus.Matched)
+            return Conflict(new { problem = "This receipt is approved. Undo the approval first." });
+
+        r.Status = ReceiptStatus.Rejected;
+        r.Problem = "Dismissed by the owner: nothing to record.";
+        await db.SaveChangesAsync(ct);
+        return Ok(ReceiptDto.From(r));
+    }
+
     private IActionResult ToResult(ApprovalOutcome o) =>
         !o.Found ? NotFound()
         : o.Problem is not null ? Conflict(new { problem = o.Problem })
         : Ok(o.Result);
+
     // POST api/receipts/{id}/read-again
     [HttpPost("{id:guid}/read-again")]
     public async Task<ActionResult<ReceiptDto>> ReadAgain(Guid id, CancellationToken ct)
@@ -87,12 +109,14 @@ public sealed class ReceiptsController(ReceiptIntakeService intake, TallyDbConte
         var r = await intake.ReadAgainAsync(id, ct);
         return r is null ? NotFound() : ReceiptDto.From(r);
     }
+
     [HttpPost("{id:guid}/paypal-note")]
     public async Task<IActionResult> RetryPayPal(Guid id, [FromServices] ApprovalService approvals, CancellationToken ct)
-    => ToResult(await approvals.RetryPayPalAsync(id, ct));
+        => ToResult(await approvals.RetryPayPalAsync(id, ct));
+
     [HttpGet("review")]
     public Task<ReviewQueue> Review([FromServices] ReviewService review, CancellationToken ct)
-    => review.GetQueueAsync(ct);
+        => review.GetQueueAsync(ct);
 
     [HttpPost("approve-all")]
     public async Task<IActionResult> ApproveAll(BulkApproveRequest req, [FromServices] ReviewService review, CancellationToken ct)
@@ -101,5 +125,4 @@ public sealed class ReceiptsController(ReceiptIntakeService intake, TallyDbConte
         if (req.ReceiptIds.Count > 50) return BadRequest(new { problem = "Up to 50 at a time." });
         return Ok(await review.ApproveSureAsync(req.ReceiptIds, ct));
     }
-
 }

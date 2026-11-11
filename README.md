@@ -2,13 +2,15 @@
 
 **Tally helps small academies and teachers keep PayPal bills accurate, even when parents pay another way.**
 
-### ▶ Watch the 3-minute demo
+## 🌐 Live demo
 
-[![Watch the Tally demo on YouTube](https://img.youtube.com/vi/XZnnA38ieS8/maxresdefault.jpg)](https://youtu.be/XZnnA38ieS8)
+| Resource | Link |
+|---|---|
+| 🎥 **Demo video** (under 3 min) | [Watch on YouTube](https://youtu.be/XZnnA38ieS8) |
+| **Live app** (hosted on Render) | https://tally-academy.onrender.com |
+| **PayPal Sandbox test buyer** | See [Try it in 2 minutes](#try-it-in-2-minutes) |
 
-**[Try it live →](https://tally-academy.onrender.com)** · test buyer login is under *Try it in 2 minutes*
-
-![Without Tally vs with Tally](docs/before-after.png)
+<img src="docs/before-after.png" alt="Without Tally vs with Tally" width="700">
 
 Parents pay class fees through PayPal, Zelle, bank transfers, checks, cash or UPI — often with no name or note
 ("$170 Zelle from R KUMAR"). The owner has to work out *which family* and *which classes* each payment covers,

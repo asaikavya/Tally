@@ -56,6 +56,12 @@ And for the families who pay **through PayPal**, the owner does **nothing** — 
 1. Open the site and click **Guide** (bottom-right). It walks you through 5 short steps.
 2. Or explore on your own: try a receipt from **More cases to try** (left), open **Parent's view ↗**, or pay a family's
    bill from its **PayPal bill ↗** pill.
+3. Clicked something out of order? The guide says so and offers **Start the guide fresh**, so you're never stuck.
+
+**▶ [Watch the 3-minute demo](https://www.youtube.com/watch?v=XZnnA38ieS8)** · **[Try it live](https://tally-academy.onrender.com)**
+
+![Without Tally vs with Tally](docs/before-after.png)
+
 
 **PayPal Sandbox test buyer** (fake money, works only on sandbox.paypal.com — also under **Test buyer login** in the app):
 
@@ -107,7 +113,8 @@ flowchart LR
 - The **Payment Detective** is plain C#. It finds the family (even from "R KUMAR") using past payment names, then
   checks **every combination** of open classes to see which ones the amount covers — and explains why, with
   strong / medium / weak evidence.
-- **Nothing counts until the owner approves**, and every approval can be **undone** (including on PayPal).
+- **Nothing counts until the owner approves**, because a screenshot isn't proof the money arrived; only the
+  owner can check the bank. Every approval can be **undone** (including on PayPal).
 
 ### What the Detective handles
 
@@ -119,7 +126,9 @@ flowchart LR
 | Overpaid | A $300 check pays 3 classes; $30 becomes family credit |
 | Duplicate | The same screenshot twice is caught by its SHA-256 fingerprint — and not sent to the AI again |
 | Unclear | "Needs a look", with the reason; Tally never guesses |
-
+| Part payment | $150 fills the oldest charges first; the rest stays on the PayPal bill |
+| Already paid | Family has nothing open: "Dismiss · nothing to record", nothing changes on PayPal |
+| Two families fit | Same amount, no clear sender: Tally shows both and asks you to pick |
 ---
 
 ## Where PayPal is used

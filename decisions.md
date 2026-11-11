@@ -4,6 +4,12 @@ The main choices behind Tally, why we made them, and what we gave up.
 
 ---
 
+**Why:** Money needs to be exact and explainable. An LLM can misread or "round" a number; deterministic code checks
+every class combination and can show *why* it chose a match. The owner stays in control of their books. And a
+screenshot isn't proof the money arrived: only the owner can check the bank, so the owner gives the final yes.
+
+---
+
 ## 1. AI reads, code decides, a human approves
 
 **Decision:** The AI only reads payment screenshots (and drafts reminder text). Matching, money math and every
@@ -122,3 +128,17 @@ was scanned with gitleaks before going public.
 **Why:** The repo is public and open source.
 
 **Trade-off:** Running it locally takes a few extra setup steps (user secrets instead of a settings file).
+
+---
+
+## 11. Never guess, never leave the owner stuck
+
+**Decision:** When the code can't be sure (two families fit the same amount, an unknown sender), Tally shows the
+options and asks the owner to pick. Every screen ends with a next step: a duplicate says "this is a copy", a
+family with nothing open offers "Dismiss · nothing to record", and the demo guide offers "Start the guide fresh"
+if something was done out of order.
+
+**Why:** A wrong guess on money costs more than one extra click. And a screen with no next step makes people
+stop trusting the tool.
+
+**Trade-off:** Unclear payments need a human look instead of being recorded automatically.

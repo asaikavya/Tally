@@ -159,8 +159,13 @@ flowchart LR
 | ✅ | Same | Draft a friendly reminder in the family's language (template fallback if AI is unavailable) |
 | ❌ | — | Matching, money math, fees, credit, approvals — **all deterministic C# (`decimal`)** |
 
+
 **Privacy by design:** the receipt reader never sees your families list; it only gets the image. The reminder
 writer sees only the one family it's writing to. Finding the family is Tally's own code.
+
+### Why AI, and not just OCR?
+
+OCR returns raw text; every payment app and bank lays receipts out differently, so OCR + rules needs a separate parser per format and breaks when a layout changes. The AI reads any receipt (Zelle, bank transfer, check photo, UPI) into the same structured fields with no templates, and writes reminders naturally in each family's language. Everything that must be exact (matching, money math, PayPal updates) stays in deterministic C#, and the owner approves.
 
 ---
 
